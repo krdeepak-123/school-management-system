@@ -35,7 +35,7 @@ export default function StudentTable({
                 <td>
                   {student.photo ? (
                     <img
-                      src={`http://localhost:5000/${student.photo}`}
+                      src={`${import.meta.env.VITE_API_URL}/${student.photo}`}
                       alt={student.name}
                       className="table-photo"
                       style={{

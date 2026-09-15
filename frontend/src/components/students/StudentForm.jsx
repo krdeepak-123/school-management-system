@@ -35,7 +35,7 @@ export default function StudentForm({ onSave, studentData }) {
         : "",
       photo: null,
       photoPreview: studentData.photo
-        ? `http://localhost:5000/${studentData.photo}`
+        ? `${import.meta.env.VITE_API_URL}/${studentData.photo}`
         : "",
       photoName: "",
     });
@@ -222,7 +222,7 @@ export default function StudentForm({ onSave, studentData }) {
             src={
               student.photoPreview
                 ? student.photoPreview
-                : `http://localhost:5000/uploads/students/${student.photo}`
+                : `${import.meta.env.VITE_API_URL}/uploads/students/${student.photo}`
             }
             alt="Student"
             width="120"

@@ -246,7 +246,7 @@ teacher.email = teacher.email.toLowerCase();
         teacher.photoPreview
           ? teacher.photoPreview
           : typeof teacher.photo === "string"
-          ? `http://localhost:5000/${teacher.photo}`
+          ? `${import.meta.env.VITE_API_URL}/${teacher.photo}`
           : URL.createObjectURL(teacher.photo)
       }
       alt="Teacher"

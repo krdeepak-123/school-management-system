@@ -42,7 +42,7 @@ export default function TeacherTable({
                   <img
                     src={
                       teacher.photo
-                        ? `http://localhost:5000/${teacher.photo}`
+                        ? `${import.meta.env.VITE_API_URL}/${teacher.photo}`
                         : "https://via.placeholder.com/50"
                     }
                     alt="teacher"

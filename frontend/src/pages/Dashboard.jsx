@@ -4,6 +4,8 @@ import axios from "axios";
 
 import { getFees } from "../services/feeService";
 
+const API_URL = `${import.meta.env.VITE_API_URL}/api`;
+
 export default function Dashboard() {
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
@@ -35,25 +37,25 @@ export default function Dashboard() {
         resultsRes,
       ] = await Promise.all([
         axios.get(
-          "http://localhost:5000/api/students"
+          `${API_URL}/students`
         ),
 
         axios.get(
-          "http://localhost:5000/api/teachers"
+          `${API_URL}/teachers`
         ),
 
         axios.get(
-          "http://localhost:5000/api/classes"
+          `${API_URL}/classes`
         ),
 
         axios.get(
-          "http://localhost:5000/api/attendance"
+          `${API_URL}/attendance`
         ),
 
         getFees(),
 
         axios.get(
-          "http://localhost:5000/api/results"
+          `${API_URL}/results`
         ),
       ]);
 

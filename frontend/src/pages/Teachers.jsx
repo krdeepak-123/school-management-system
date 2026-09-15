@@ -141,7 +141,7 @@ export default function Teachers() {
               <img
                 src={
                   viewTeacher.photo
-                    ? `http://localhost:5000/${viewTeacher.photo}`
+                    ? `${import.meta.env.VITE_API_URL}/${viewTeacher.photo}`
                     : "https://via.placeholder.com/150"
                 }
                 alt={viewTeacher.name}

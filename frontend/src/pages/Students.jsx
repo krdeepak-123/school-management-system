@@ -148,7 +148,7 @@ export default function Students() {
         <img
           src={
             viewStudent.photo
-              ? `http://localhost:5000/${viewStudent.photo}`
+              ? `${import.meta.env.VITE_API_URL}/${viewStudent.photo}`
               : "https://via.placeholder.com/150"
           }
           alt={viewStudent.name}
