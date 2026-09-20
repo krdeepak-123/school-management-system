@@ -2,37 +2,81 @@ const express = require("express");
 
 const router = express.Router();
 
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
+
 const {
   createResult,
   getResults,
   getSingleResult,
   updateResult,
   deleteResult,
+  getMyResults,
+  getMyTeacherResults,
 } = require("../controllers/resultController");
 
 // ==========================================
-// CREATE RESULT
+// MY RESULTS (any logged-in user; students get their own records)
 // ==========================================
-router.post("/", createResult);
+router.get("/mine", protect, getMyResults);
 
 // ==========================================
-// GET ALL RESULTS
+// MY RESULTS (Teachers — results of their assigned
+// classes only) Must be registered BEFORE /:id
 // ==========================================
-router.get("/", getResults);
+router.get("/teacher-mine", protect, getMyTeacherResults);
 
 // ==========================================
-// GET SINGLE RESULT
+// CREATE RESULT (Teacher, Principal, Director, Admin)
+// Teachers are class-scoped in the controller
 // ==========================================
-router.get("/:id", getSingleResult);
+router.post(
+  "/",
+  protect,
+  authorizeRoles("teacher", "principal", "director", "admin"),
+  createResult
+);
 
 // ==========================================
-// UPDATE RESULT
+// GET ALL RESULTS (Principal, Director, Admin)
+// Teachers use /teacher-mine (scoped to their classes)
 // ==========================================
-router.put("/:id", updateResult);
+router.get(
+  "/",
+  protect,
+  authorizeRoles("principal", "director", "admin"),
+  getResults
+);
 
 // ==========================================
-// DELETE RESULT
+// GET SINGLE RESULT (Principal, Director, Admin)
 // ==========================================
-router.delete("/:id", deleteResult);
+router.get(
+  "/:id",
+  protect,
+  authorizeRoles("principal", "director", "admin"),
+  getSingleResult
+);
+
+// ==========================================
+// UPDATE RESULT (Teacher, Principal, Director, Admin)
+// Teachers can only update unlocked results of
+// their assigned classes (enforced in the controller)
+// ==========================================
+router.put(
+  "/:id",
+  protect,
+  authorizeRoles("teacher", "principal", "director", "admin"),
+  updateResult
+);
+
+// ==========================================
+// DELETE RESULT (Principal, Director, Admin)
+// ==========================================
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("principal", "director", "admin"),
+  deleteResult
+);
 
 module.exports = router;

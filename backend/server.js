@@ -2,16 +2,27 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const path = require('path');   // ✅ ADD
+const dns = require('node:dns'); // safe DNS diagnostic (SRV hostnames only)
 
 require('dotenv').config();
 
 const adminRoutes = require('./routes/adminRoutes');
+const authRoutes = require('./routes/authRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const classRoutes = require("./routes/classRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const feeRoutes = require("./routes/feeRoutes");
 const resultRoutes = require("./routes/resultRoutes");
+const subjectRoutes = require("./routes/subjectRoutes");
+const timetableRoutes = require("./routes/timetableRoutes");
+const examRoutes = require("./routes/examRoutes");
+const noticeRoutes = require("./routes/noticeRoutes");
+const assignmentRoutes = require("./routes/assignmentRoutes");
+const studyMaterialRoutes = require("./routes/studyMaterialRoutes");
+const leaveRoutes = require("./routes/leaveRoutes");
+
+const User = require('./models/User');
 
 const app = express();
 
@@ -23,22 +34,136 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/students', studentRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/fees", feeRoutes);
 app.use("/api/results", resultRoutes);
+app.use("/api/subjects", subjectRoutes);
+app.use("/api/timetable", timetableRoutes);
+app.use("/api/exams", examRoutes);
+app.use("/api/notices", noticeRoutes);
+app.use("/api/assignments", assignmentRoutes);
+app.use("/api/materials", studyMaterialRoutes);
+app.use("/api/leaves", leaveRoutes);
 
-// MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('MongoDB Connected');
-    app.listen(process.env.PORT || 5000, () => {
-      console.log(`Server running on port ${process.env.PORT || 5000}`);
+// ==========================================
+// BOOTSTRAP: Create a default admin only if
+// (a) configured via environment variables and
+// (b) no admin account exists. Admin creation is
+// otherwise protected (see /api/auth/register-admin).
+// No credentials are hard-coded.
+// ==========================================
+async function seedDefaultAdmin() {
+  const email = process.env.DEFAULT_ADMIN_EMAIL;
+  const password = process.env.DEFAULT_ADMIN_PASSWORD;
+
+  if (!email || !password) {
+    console.log('Default admin not configured (set DEFAULT_ADMIN_EMAIL / DEFAULT_ADMIN_PASSWORD).');
+    return;
+  }
+
+  const existingAdmin = await User.findOne({ role: 'admin' });
+  if (!existingAdmin) {
+    await User.create({
+      userId: process.env.DEFAULT_ADMIN_USER_ID || 'ADM-001',
+      name: process.env.DEFAULT_ADMIN_NAME || 'System Admin',
+      email: email.toLowerCase().trim(),
+      password,
+      mobile: process.env.DEFAULT_ADMIN_MOBILE || '0000000000',
+      role: 'admin',
     });
-  })
-  .catch((err) => {
-    console.error('MongoDB Connection Error:', err);
+    console.log(`Default admin created → email: ${email.toLowerCase().trim()}`);
+  }
+}
+
+// ==========================================
+// DNS BOOTSTRAP (safe, diagnostic only)
+// ------------------------------------------------------------
+// Mongo Atlas SRV lookups are sometimes blocked by a local
+// resolver / VPN / proxy even though `nslookup ... 8.8.8.8`
+// works. This grabs the SRV hostname from MONGO_URI (host
+// only — never the user/password), resolves _mongodb._tcp,
+// and if the default resolver refuses, falls back to public
+// resolvers via dns.setServers. Only hostnames are printed.
+// ==========================================
+const { resolveSrv } = require('node:dns').promises;
+
+function extractSrvHost(uri = '') {
+  const rest = uri.replace(/^mongodb(?:\+srv)?:\/\//, '');
+  const hostPart = rest.split('/')[0];
+  const host = hostPart.includes('@') ? hostPart.split('@').pop() : hostPart;
+  return host.split(':')[0]; // hostname only, no credentials
+}
+
+async function bootstrapDns() {
+  const host = extractSrvHost(process.env.MONGO_URI);
+  if (!host || !host.endsWith('.mongodb.net')) {
+    console.log('DNS bootstrap: no Atlas SRV host to probe (hostname only, no secrets revealed).');
+    return;
+  }
+  const srvName = `_mongodb._tcp.${host}`;
+  const attempt = async () => (await resolveSrv(srvName)).map((r) => r.name);
+
+  try {
+    const hosts = await attempt();
+    console.log(`DNS bootstrap ✔ resolveSrv(${srvName}) → ${hosts.join(', ')}`);
+  } catch (err) {
+    console.log(`DNS bootstrap: default resolver failed (${err.code || err.message}) — retrying via 8.8.8.8 / 1.1.1.1`);
+    try {
+      dns.setServers(['8.8.8.8', '1.1.1.1']);
+      const hosts = await attempt();
+      console.log(`DNS bootstrap ✔ resolveSrv after setServers → ${hosts.join(', ')}`);
+    } catch (err2) {
+      console.log(`DNS bootstrap: STILL failing after setServers (${err2.code || err2.message}). SRV lookup cannot complete; MongoDB connect may fail.`);
+    }
+  }
+}
+
+// ==========================================
+// /api/health — server liveness, independent of
+// MongoDB. Express always listens even if MongoDB
+// is temporarily unreachable, so the app (and the
+// frontend's health check) stays up.
+// ==========================================
+app.get('/api/health', (req, res) => {
+  const mongoUp = mongoose.connection.readyState === 1;
+  res.status(mongoUp ? 200 : 200).json({
+    success: true,
+    message: 'School Management API is running',
+    mongodb: mongoUp ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString(),
   });
+});
+
+// MongoDB Connection (Express always listens, even if MongoDB is
+// temporarily unreachable — /api/health stays up; app keeps running).
+async function startServer() {
+  try {
+    await bootstrapDns();
+  } catch (err) {
+    console.log(`DNS bootstrap error: ${err.message}`);
+  }
+
+  mongoose
+    .connect(process.env.MONGO_URI)
+    .then(async () => {
+      console.log('MongoDB Connected');
+      try {
+        await seedDefaultAdmin();
+      } catch (se) {
+        console.error('Admin seed error:', se.message);
+      }
+    })
+    .catch((err) => {
+      console.error('MongoDB Connection Error:', err);
+    });
+
+  app.listen(process.env.PORT || 5000, () => {
+    console.log(`Server running on port ${process.env.PORT || 5000}`);
+  });
+}
+
+startServer();

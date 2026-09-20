@@ -315,3 +315,116 @@ exports.deleteTeacher = async (req, res) => {
   }
 };
 
+// ==========================================
+// MY PROFILE (Teachers — own record only,
+// resolved from the linked User account)
+// ==========================================
+exports.getMyProfile = async (req, res) => {
+  try {
+    if (req.user.role !== "teacher") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+
+    const teacher = await Teacher.findById(req.user.linkedId);
+
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "No teacher record is linked to your account",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: teacher,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ==========================================
+// UPDATE MY PROFILE (Teachers — permitted fields
+// only: mobile, address, photo, qualification.
+// Identity/employment fields are school-managed.)
+// ==========================================
+exports.updateMyProfile = async (req, res) => {
+  try {
+    if (req.user.role !== "teacher") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+
+    // Whitelist — teachers cannot change teacherId,
+    // name, email, subject, department, salary,
+    // joiningDate or status
+    const updates = {};
+
+    if (req.body.mobile !== undefined) {
+      const mobile = String(req.body.mobile).trim();
+      if (mobile && !/^\d{10,15}$/.test(mobile)) {
+        return res.status(400).json({
+          success: false,
+          message: "Mobile number must be 10-15 digits",
+        });
+      }
+      updates.mobile = mobile;
+    }
+
+    if (req.body.address !== undefined) {
+      updates.address = String(req.body.address).trim();
+    }
+
+    if (req.body.qualification !== undefined) {
+      updates.qualification = String(req.body.qualification).trim();
+    }
+
+    if (req.file) {
+      updates.photo = `uploads/${req.file.filename}`;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "No permitted fields to update (mobile, address, qualification, photo only)",
+      });
+    }
+
+    const teacher = await Teacher.findByIdAndUpdate(
+      req.user.linkedId,
+      updates,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "No teacher record is linked to your account",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: teacher,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+

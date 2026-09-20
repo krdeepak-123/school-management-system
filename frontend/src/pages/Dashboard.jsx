@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import API from "../services/api";
 
 import { getFees } from "../services/feeService";
 
@@ -36,25 +36,25 @@ export default function Dashboard() {
         feesData,
         resultsRes,
       ] = await Promise.all([
-        axios.get(
+        API.get(
           `${API_URL}/students`
         ),
 
-        axios.get(
+        API.get(
           `${API_URL}/teachers`
         ),
 
-        axios.get(
+        API.get(
           `${API_URL}/classes`
         ),
 
-        axios.get(
+        API.get(
           `${API_URL}/attendance`
         ),
 
         getFees(),
 
-        axios.get(
+        API.get(
           `${API_URL}/results`
         ),
       ]);

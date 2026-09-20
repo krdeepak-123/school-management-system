@@ -72,6 +72,13 @@ const resultSchema = new mongoose.Schema(
       default: "Fail",
     },
 
+    // Locked results can only be changed by
+    // Principal, Director or Admin
+    locked: {
+      type: Boolean,
+      default: false,
+    },
+
     examDate: {
       type: Date,
       required: true,

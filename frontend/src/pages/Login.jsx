@@ -1,178 +1,112 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/auth";
 import "../styles/login.css";
+import "../styles/auth.css";
 
-export default function Login({ onLogin }) {
-  const [email, setEmail] = useState("");
+// Destinations come from the backend-provided role only.
+const ROLE_DESTINATIONS = {
+  student: "/student-dashboard",
+  teacher: "/teacher-dashboard",
+  principal: "/principal/dashboard",
+  director: "/director/dashboard",
+  admin: "/admin/dashboard",
+};
+
+export default function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [identifier, setIdentifier] = useState(location.state?.registeredEmail || "");
   const [password, setPassword] = useState("");
-
   const [showPassword, setShowPassword] = useState(false);
-
   const [remember, setRemember] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(location.state?.registered || false);
 
-  // DEFAULT ROLE
-  const [role, setRole] = useState("admin");
-
-  // ==========================================
-  // LOGIN
-  // ==========================================
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
+    setSuccess(false);
 
-    console.log("Login Button Clicked");
-    console.log("Selected Role:", role);
-
-    if (!email || !password) {
-      alert("Please fill all fields");
+    if (!identifier.trim() || !password) {
+      setError("Please fill all fields");
       return;
     }
 
-    // ROLE BASED LOGIN
-    if (role === "admin") {
-      alert("Admin Login Success");
-    }
+    try {
+      setLoading(true);
+      // Role is resolved by the backend and returned with the token
+      const data = await login(identifier.trim(), password);
 
-    if (role === "teacher") {
-      alert("Teacher Login Success");
+      const destination = ROLE_DESTINATIONS[data.role] || "/dashboard";
+      navigate(destination, { replace: true });
+    } catch (err) {
+      setError(err.response?.data?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    if (role === "student") {
-      alert("Student Login Success");
-    }
-
-    // Parent ko role bhejna
-    onLogin(role);
   };
-
-  // ==========================================
-  // DEMO ROLE LOGIN
-  // ==========================================
-
-  const selectRole = (selectedRole) => {
-    setRole(selectedRole);
-  };
-
-  // ==========================================
-  // UI
-  // ==========================================
 
   return (
     <div className="login-container">
-
       <div className="login-card">
+        <h1 className="login-title">🏫 School Management System</h1>
 
-        {/* TITLE */}
+        <p className="login-subtitle">Welcome Back! Please login to continue.</p>
 
-        <h1 className="login-title">
-          🏫 School Management System
-        </h1>
-
-        <p className="login-subtitle">
-          Welcome Back! Please login to continue.
-        </p>
-
-        {/* ROLE SELECT */}
-
-        <div className="role-section">
-
-          <h3>Select Login Role</h3>
-
-          <div className="role-buttons">
-
-            {/* ADMIN */}
-
-            <button
-              type="button"
-              className={`role-btn ${
-                role === "admin" ? "active-role" : ""
-              }`}
-              onClick={() => selectRole("admin")}
-            >
-              👨‍💼
-              <span>Admin</span>
-            </button>
-
-            {/* TEACHER */}
-
-            <button
-              type="button"
-              className={`role-btn ${
-                role === "teacher" ? "active-role" : ""
-              }`}
-              onClick={() => selectRole("teacher")}
-            >
-              👨‍🏫
-              <span>Teacher</span>
-            </button>
-
-            {/* STUDENT */}
-
-            <button
-              type="button"
-              className={`role-btn ${
-                role === "student" ? "active-role" : ""
-              }`}
-              onClick={() => selectRole("student")}
-            >
-              👨‍🎓
-              <span>Student</span>
-            </button>
-
-          </div>
-
-        </div>
-
-        {/* SELECTED ROLE */}
-
-        <div className="selected-role">
-          Login as:{" "}
-          <strong>
-            {role.charAt(0).toUpperCase() + role.slice(1)}
-          </strong>
-        </div>
-
-        {/* LOGIN FORM */}
-
-        <form onSubmit={handleLogin}>
-
-          {/* EMAIL */}
-
-          <input
-            className="login-input"
-            type="email"
-            placeholder="Enter Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
-          {/* PASSWORD */}
-
+        {success && (
           <div
             style={{
-              position: "relative",
+              background: "#dcfce7",
+              color: "#166534",
+              padding: "12px",
+              borderRadius: "8px",
+              marginBottom: "20px",
+              fontWeight: "bold",
             }}
           >
+            ✅ Registration successful! Please login with your new account.
+          </div>
+        )}
 
+        {error && (
+          <div
+            style={{
+              background: "#fee2e2",
+              color: "#991b1b",
+              padding: "12px",
+              borderRadius: "8px",
+              marginBottom: "20px",
+              fontWeight: "bold",
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleLogin}>
+          <input
+            className="login-input"
+            type="text"
+            placeholder="User ID or Email"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+          />
+
+          <div style={{ position: "relative" }}>
             <input
               className="login-input"
-              type={
-                showPassword
-                  ? "text"
-                  : "password"
-              }
+              type={showPassword ? "text" : "password"}
               placeholder="Enter Password"
               value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
+              onChange={(e) => setPassword(e.target.value)}
             />
 
             <span
-              onClick={() =>
-                setShowPassword(!showPassword)
-              }
+              onClick={() => setShowPassword(!showPassword)}
               style={{
                 position: "absolute",
                 right: "15px",
@@ -181,57 +115,41 @@ export default function Login({ onLogin }) {
                 userSelect: "none",
               }}
             >
-              {showPassword
-                ? "🙈"
-                : "👁️"}
+              {showPassword ? "🙈" : "👁️"}
             </span>
-
           </div>
 
-          {/* OPTIONS */}
-
           <div className="login-options">
-
             <label>
-
               <input
                 type="checkbox"
                 checked={remember}
-                onChange={() =>
-                  setRemember(!remember)
-                }
+                onChange={() => setRemember(!remember)}
               />
-
               {" "}Remember Me
-
             </label>
 
-            <Link
-              className="login-link"
-              to="/forgot-password"
-            >
+            <Link className="login-link" to="/forgot-password">
               Forgot Password?
             </Link>
-
           </div>
 
-          {/* LOGIN BUTTON */}
-
-          <button
-            type="submit"
-            className="login-btn"
-          >
-            Login as{" "}
-            {role.charAt(0).toUpperCase() +
-              role.slice(1)}
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
           </button>
-
         </form>
 
-      </div>
+        <hr />
 
+        <div style={{ textAlign: "center" }}>
+          <p style={{ color: "#64748b", fontSize: "18px" }}>
+            Don't have an account?{" "}
+            <Link className="login-link" to="/register">
+              Create Account
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
-
-

@@ -2,42 +2,70 @@ const express = require("express");
 
 const router = express.Router();
 
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
+
 const {
-createFee,
-getFees,
-getSingleFee,
-updateFee,
-deleteFee,
+  createFee,
+  getFees,
+  getSingleFee,
+  updateFee,
+  deleteFee,
+  getMyFees,
 } = require("../controllers/feeController");
 
 // ==========================================
-// CREATE FEE
-// POST /api/fees
+// MY FEES (any logged-in user; students get their own records)
 // ==========================================
-router.post("/", createFee);
+router.get("/mine", protect, getMyFees);
 
 // ==========================================
-// GET ALL FEES
-// GET /api/fees
+// CREATE FEE (Principal, Director, Admin)
 // ==========================================
-router.get("/", getFees);
+router.post(
+  "/",
+  protect,
+  authorizeRoles("principal", "director", "admin"),
+  createFee
+);
 
 // ==========================================
-// GET SINGLE FEE
-// GET /api/fees/:id
+// GET ALL FEES (Teacher, Principal, Director, Admin)
 // ==========================================
-router.get("/:id", getSingleFee);
+router.get(
+  "/",
+  protect,
+  authorizeRoles("teacher", "principal", "director", "admin"),
+  getFees
+);
 
 // ==========================================
-// UPDATE FEE
-// PUT /api/fees/:id
+// GET SINGLE FEE (Teacher, Principal, Director, Admin)
 // ==========================================
-router.put("/:id", updateFee);
+router.get(
+  "/:id",
+  protect,
+  authorizeRoles("teacher", "principal", "director", "admin"),
+  getSingleFee
+);
 
 // ==========================================
-// DELETE FEE
-// DELETE /api/fees/:id
+// UPDATE FEE (Principal, Director, Admin)
 // ==========================================
-router.delete("/:id", deleteFee);
+router.put(
+  "/:id",
+  protect,
+  authorizeRoles("principal", "director", "admin"),
+  updateFee
+);
+
+// ==========================================
+// DELETE FEE (Principal, Director, Admin)
+// ==========================================
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("principal", "director", "admin"),
+  deleteFee
+);
 
 module.exports = router;

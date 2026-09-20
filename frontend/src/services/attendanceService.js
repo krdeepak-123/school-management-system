@@ -8,6 +8,23 @@ export const getAttendance = () => {
 };
 
 // ==========================
+// GET MY ATTENDANCE (own records)
+// ==========================
+export const getMyAttendance = async () => {
+  const res = await api.get("/attendance/mine");
+  return res.data.data;
+};
+
+// ==========================
+// GET MY ATTENDANCE RECORDS (teachers —
+// records of their assigned classes)
+// ==========================
+export const getMyTeacherAttendance = async () => {
+  const res = await api.get("/attendance/teacher-mine");
+  return res.data.data;
+};
+
+// ==========================
 // ADD ATTENDANCE
 // ==========================
 export const addAttendance = (attendanceData) => {

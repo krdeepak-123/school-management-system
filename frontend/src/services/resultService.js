@@ -10,6 +10,25 @@ export const getResults = async () => {
 };
 
 // ==========================================
+// GET MY RESULTS (own records)
+// ==========================================
+export const getMyResults = async () => {
+  const response = await api.get("/results/mine");
+
+  return response.data?.data || [];
+};
+
+// ==========================================
+// GET MY RESULTS (teachers — results of their
+// assigned classes, for marks entry & performance)
+// ==========================================
+export const getMyTeacherResults = async () => {
+  const response = await api.get("/results/teacher-mine");
+
+  return response.data?.data || [];
+};
+
+// ==========================================
 // GET SINGLE RESULT
 // ==========================================
 export const getResultById = async (id) => {

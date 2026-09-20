@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const upload = require("../middleware/upload");
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 const {
   createStudent,
@@ -9,21 +10,80 @@ const {
   getStudent,
   updateStudent,
   deleteStudent,
+  getMyProfile,
+  updateMyProfile,
+  getMyTeacherStudents,
 } = require("../controllers/studentController");
 
-// Create Student
-router.post("/", upload.single("photo"), createStudent);
+// ==========================================
+// MY PROFILE (Students — own record only)
+// Must be registered BEFORE /:id
+// ==========================================
+router.get(
+  "/me",
+  protect,
+  getMyProfile
+);
 
-// Get All Students
-router.get("/", getStudents);
+// Edit permitted profile fields only
+// (mobile, address, photo)
+router.put(
+  "/me",
+  protect,
+  updateMyProfile
+);
 
-// Get Single Student
-router.get("/:id", getStudent);
+// ==========================================
+// MY STUDENTS (Teachers — students of assigned
+// classes only) Must be registered BEFORE /:id
+// ==========================================
+router.get(
+  "/teacher-mine",
+  protect,
+  getMyTeacherStudents
+);
 
-// Update Student
-router.put("/:id", upload.single("photo"), updateStudent);
+// Create Student (Principal, Director, Admin)
+router.post(
+  "/",
+  protect,
+  authorizeRoles("principal", "director", "admin"),
+  upload.single("photo"),
+  createStudent
+);
 
-// Delete Student
-router.delete("/:id", deleteStudent);
+// Get All Students (Principal, Director, Admin)
+// Teachers use /teacher-mine (scoped to their classes)
+router.get(
+  "/",
+  protect,
+  authorizeRoles("principal", "director", "admin"),
+  getStudents
+);
+
+// Get Single Student (Principal, Director, Admin)
+router.get(
+  "/:id",
+  protect,
+  authorizeRoles("principal", "director", "admin"),
+  getStudent
+);
+
+// Update Student (Principal, Director, Admin)
+router.put(
+  "/:id",
+  protect,
+  authorizeRoles("principal", "director", "admin"),
+  upload.single("photo"),
+  updateStudent
+);
+
+// Delete Student (Principal, Director, Admin)
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("principal", "director", "admin"),
+  deleteStudent
+);
 
 module.exports = router;

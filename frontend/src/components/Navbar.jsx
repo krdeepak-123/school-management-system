@@ -1,19 +1,48 @@
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/auth";
+
+const ROLE_LABELS = {
+  student: "Student",
+  teacher: "Teacher",
+  principal: "Principal",
+  director: "Director",
+  admin: "Administrator",
+};
+
 export default function Navbar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
+  const roleLabel = ROLE_LABELS[user?.role] || "User";
+  const displayName = user?.linkedData?.name || user?.name || "User";
+  const initial = displayName.charAt(0).toUpperCase();
+
   return (
     <div style={styles.navbar}>
       <div>
         <h2 style={styles.title}>Paradise kids School Management System</h2>
-        <p style={styles.subtitle}>Admin or principal Dashboard</p>
+        <p style={styles.subtitle}>{roleLabel} Dashboard</p>
       </div>
 
-      <div style={styles.user}>
-        <div style={styles.avatar}>A</div>
+      <div style={styles.right}>
+        <div style={styles.user}>
+          <div style={styles.avatar}>{initial}</div>
 
-        <div>
-          <strong>Admin</strong>
-          <br />
-          <small>Administrator</small>
+          <div>
+            <strong>{displayName}</strong>
+            <br />
+            <small>{roleLabel}</small>
+          </div>
         </div>
+
+        <button onClick={handleLogout} style={styles.logoutBtn}>
+          Logout
+        </button>
       </div>
     </div>
   );
@@ -41,6 +70,12 @@ const styles = {
     fontSize: "14px",
   },
 
+  right: {
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
+  },
+
   user: {
     display: "flex",
     alignItems: "center",
@@ -57,5 +92,16 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     fontWeight: "bold",
+  },
+
+  logoutBtn: {
+    background: "#dc2626",
+    color: "#fff",
+    border: "none",
+    borderRadius: "8px",
+    padding: "8px 16px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    transition: "0.2s",
   },
 };

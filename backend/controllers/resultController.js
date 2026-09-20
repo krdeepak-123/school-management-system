@@ -1,4 +1,5 @@
 const Result = require("../models/Result");
+const Student = require("../models/Student");
 
 // ==========================================
 // Generate Result ID
@@ -92,6 +93,27 @@ exports.createResult = async (
       obtainedMarks,
       examDate,
     } = req.body;
+
+    // Teacher class-scope enforcement: teachers may
+    // only enter marks for their assigned classes
+    if (req.user.role === "teacher") {
+      const { getTeacherAccess, isClassAssigned } = require("../utils/teacherAccess");
+      const access = await getTeacherAccess(req.user.linkedId);
+
+      if (!access) {
+        return res.status(403).json({
+          success: false,
+          message: "No teacher record is linked to your account",
+        });
+      }
+
+      if (!isClassAssigned(access.classes, className, section)) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only enter marks for your assigned classes",
+        });
+      }
+    }
 
     // ==============================
     // Required Fields
@@ -267,6 +289,93 @@ exports.createResult = async (
 };
 
 // ==========================================
+// MY RESULTS (Students see only their own records)
+// ==========================================
+exports.getMyResults = async (req, res) => {
+  try {
+    if (req.user.role === "student") {
+      const student = await Student.findById(req.user.linkedId);
+
+      if (!student) {
+        return res.status(200).json({ success: true, count: 0, data: [] });
+      }
+
+      const results = await Result.find({
+        className: student.className,
+        section: student.section,
+        rollNo: student.rollNo,
+      }).sort({ createdAt: -1 });
+
+      return res.status(200).json({
+        success: true,
+        count: results.length,
+        data: results,
+      });
+    }
+
+    const results = await Result.find().sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: results.length,
+      data: results,
+    });
+  } catch (error) {
+    console.error("Get My Results Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ==========================================
+// MY RESULTS (Teachers — only results of the
+// classes assigned to them, for marks entry
+// and class performance)
+// ==========================================
+exports.getMyTeacherResults = async (req, res) => {
+  try {
+    if (req.user.role !== "teacher") {
+      return res.status(403).json({ success: false, message: "Access denied" });
+    }
+
+    const { getTeacherAccess } = require("../utils/teacherAccess");
+    const access = await getTeacherAccess(req.user.linkedId);
+
+    if (!access) {
+      return res.status(404).json({
+        success: false,
+        message: "No teacher record is linked to your account",
+      });
+    }
+
+    const classFilters = access.classes.map((c) => {
+      const filter = {
+        className: new RegExp(`^${c.className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+      };
+      if (c.section) {
+        filter.section = new RegExp(`^${c.section.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+      }
+      return filter;
+    });
+
+    if (classFilters.length === 0) {
+      return res.status(200).json({ success: true, count: 0, data: [] });
+    }
+
+    const results = await Result.find({ $or: classFilters }).sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json({
+      success: true,
+      count: results.length,
+      data: results,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ==========================================
 // GET ALL RESULTS
 // ==========================================
 exports.getResults = async (
@@ -425,6 +534,57 @@ exports.updateResult = async (
       status: calculated.status,
       examDate,
     };
+
+    // Lock management — only Principal, Director, Admin
+    // can lock/unlock results
+    if (
+      req.user.role === "principal" ||
+      req.user.role === "director" ||
+      req.user.role === "admin"
+    ) {
+      if (req.body.locked !== undefined) {
+        updatedData.locked = Boolean(req.body.locked);
+      }
+    }
+
+    // Teacher enforcement: assigned classes only,
+    // and only before the result is locked
+    if (req.user.role === "teacher") {
+      const existing = await Result.findById(req.params.id);
+      if (!existing) {
+        return res.status(404).json({
+          success: false,
+          message: "Result Not Found",
+        });
+      }
+
+      if (existing.locked) {
+        return res.status(403).json({
+          success: false,
+          message: "This result is locked. Contact administration to change it.",
+        });
+      }
+
+      const { getTeacherAccess, isClassAssigned } = require("../utils/teacherAccess");
+      const access = await getTeacherAccess(req.user.linkedId);
+
+      if (!access) {
+        return res.status(403).json({
+          success: false,
+          message: "No teacher record is linked to your account",
+        });
+      }
+
+      const className = updatedData.className || existing.className;
+      const section = updatedData.section !== undefined ? updatedData.section : existing.section;
+
+      if (!isClassAssigned(access.classes, className, section)) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only update results for your assigned classes",
+        });
+      }
+    }
 
     const result =
       await Result.findByIdAndUpdate(

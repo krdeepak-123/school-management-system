@@ -1,12 +1,18 @@
-import axios from "axios";
-
-const API_URL = `${import.meta.env.VITE_API_URL}/api/fees`;
+import api from "./api";
 
 // ==========================================
 // GET ALL FEES
 // ==========================================
 export const getFees = async () => {
-  const res = await axios.get(API_URL);
+  const res = await api.get("/fees");
+  return res.data.data;
+};
+
+// ==========================================
+// GET MY FEES (own records)
+// ==========================================
+export const getMyFees = async () => {
+  const res = await api.get("/fees/mine");
   return res.data.data;
 };
 
@@ -14,7 +20,7 @@ export const getFees = async () => {
 // GET SINGLE FEE
 // ==========================================
 export const getFee = async (id) => {
-  const res = await axios.get(`${API_URL}/${id}`);
+  const res = await api.get(`/fees/${id}`);
   return res.data.data;
 };
 
@@ -22,7 +28,7 @@ export const getFee = async (id) => {
 // ADD FEE
 // ==========================================
 export const addFee = async (feeData) => {
-  const res = await axios.post(API_URL, feeData);
+  const res = await api.post("/fees", feeData);
   return res.data.data;
 };
 
@@ -30,7 +36,7 @@ export const addFee = async (feeData) => {
 // UPDATE FEE
 // ==========================================
 export const updateFee = async (id, feeData) => {
-  const res = await axios.put(`${API_URL}/${id}`, feeData);
+  const res = await api.put(`/fees/${id}`, feeData);
   return res.data.data;
 };
 
@@ -38,6 +44,6 @@ export const updateFee = async (id, feeData) => {
 // DELETE FEE
 // ==========================================
 export const deleteFee = async (id) => {
-  const res = await axios.delete(`${API_URL}/${id}`);
+  const res = await api.delete(`/fees/${id}`);
   return res.data;
 };

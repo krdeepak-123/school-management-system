@@ -1,4 +1,5 @@
 const Fee = require("../models/Fee");
+const Student = require("../models/Student");
 
 // ==========================================
 // GENERATE FEE ID
@@ -113,6 +114,44 @@ res.status(400).json({
 
 
 }
+};
+
+// ==========================================
+// MY FEES (Students see only their own records)
+// ==========================================
+exports.getMyFees = async (req, res) => {
+  try {
+    if (req.user.role === "student") {
+      const student = await Student.findById(req.user.linkedId);
+
+      if (!student) {
+        return res.status(200).json({ success: true, count: 0, data: [] });
+      }
+
+      const fees = await Fee.find({
+        className: student.className,
+        section: student.section,
+        rollNo: student.rollNo,
+      }).sort({ createdAt: -1 });
+
+      return res.status(200).json({
+        success: true,
+        count: fees.length,
+        data: fees,
+      });
+    }
+
+    const fees = await Fee.find().sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: fees.length,
+      data: fees,
+    });
+  } catch (error) {
+    console.error("GET MY FEES ERROR:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 // ==========================================

@@ -2,42 +2,81 @@ const express = require("express");
 
 const router = express.Router();
 
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
+
 const {
   createAttendance,
   getAttendance,
   getSingleAttendance,
   updateAttendance,
   deleteAttendance,
+  getMyAttendance,
+  getMyTeacherAttendance,
 } = require("../controllers/attendanceController");
 
 // ==========================================
-// CREATE ATTENDANCE
-// POST /api/attendance
+// MY ATTENDANCE (any logged-in user; students get their own records)
+// GET /api/attendance/mine
 // ==========================================
-router.post("/", createAttendance);
+router.get("/mine", protect, getMyAttendance);
 
 // ==========================================
-// GET ALL ATTENDANCE
-// GET /api/attendance
+// MY ATTENDANCE RECORDS (Teachers — records of
+// their assigned classes only)
+// Must be registered BEFORE /:id
 // ==========================================
-router.get("/", getAttendance);
+router.get("/teacher-mine", protect, getMyTeacherAttendance);
 
 // ==========================================
-// GET SINGLE ATTENDANCE
-// GET /api/attendance/:id
+// CREATE ATTENDANCE (Teacher, Principal, Director, Admin)
+// Teachers are class-scoped in the controller
 // ==========================================
-router.get("/:id", getSingleAttendance);
+router.post(
+  "/",
+  protect,
+  authorizeRoles("teacher", "principal", "director", "admin"),
+  createAttendance
+);
 
 // ==========================================
-// UPDATE ATTENDANCE
-// PUT /api/attendance/:id
+// GET ALL ATTENDANCE (Principal, Director, Admin)
+// Teachers use /teacher-mine (scoped to their classes)
 // ==========================================
-router.put("/:id", updateAttendance);
+router.get(
+  "/",
+  protect,
+  authorizeRoles("principal", "director", "admin"),
+  getAttendance
+);
 
 // ==========================================
-// DELETE ATTENDANCE
-// DELETE /api/attendance/:id
+// GET SINGLE ATTENDANCE (Teacher, Principal, Director, Admin)
 // ==========================================
-router.delete("/:id", deleteAttendance);
+router.get(
+  "/:id",
+  protect,
+  authorizeRoles("teacher", "principal", "director", "admin"),
+  getSingleAttendance
+);
+
+// ==========================================
+// UPDATE ATTENDANCE (Teacher, Principal, Director, Admin)
+// ==========================================
+router.put(
+  "/:id",
+  protect,
+  authorizeRoles("teacher", "principal", "director", "admin"),
+  updateAttendance
+);
+
+// ==========================================
+// DELETE ATTENDANCE (Teacher, Principal, Director, Admin)
+// ==========================================
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("teacher", "principal", "director", "admin"),
+  deleteAttendance
+);
 
 module.exports = router;

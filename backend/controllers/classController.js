@@ -198,3 +198,99 @@ exports.deleteClass = async (req, res) => {
     });
   }
 };
+
+// ==========================================
+// MY CLASSES (Teachers — only classes assigned
+// to them, resolved from the linked account)
+// ==========================================
+exports.getMyTeacherClasses = async (req, res) => {
+  try {
+    if (req.user.role !== "teacher") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+
+    const { getTeacherAccess } = require("../utils/teacherAccess");
+    const access = await getTeacherAccess(req.user.linkedId);
+
+    if (!access) {
+      return res.status(404).json({
+        success: false,
+        message: "No teacher record is linked to your account",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      count: access.classes.length,
+      data: access.classes,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ==========================================
+// MY CLASS (Students — only their own class,
+// resolved from the linked User account)
+// ==========================================
+exports.getMyClass = async (req, res) => {
+  try {
+    if (req.user.role !== "student") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+
+    const Student = require("../models/Student");
+    const student = await Student.findById(req.user.linkedId);
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "No student record is linked to your account",
+      });
+    }
+
+    // Class names are stored uppercase — match case-insensitively
+    const query = {
+      className: new RegExp(
+        `^${student.className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+        "i"
+      ),
+    };
+
+    if (student.section) {
+      const sectionRegex = new RegExp(
+        `^${student.section.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+        "i"
+      );
+      query.section = sectionRegex;
+    }
+
+    const classData = await Class.findOne(query);
+
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: "Class record not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: classData,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

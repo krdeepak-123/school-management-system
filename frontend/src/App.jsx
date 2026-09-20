@@ -1,15 +1,12 @@
-import { useState } from "react";
-import Login from "./pages/Login";
+import AuthProvider from "./context/AuthContext";
 import AppRoutes from "./routes/AppRoutes";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  if (!isLoggedIn) {
-    return <Login onLogin={() => setIsLoggedIn(true)} />;
-  }
-
-  return <AppRoutes />;
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
 }
 
 export default App;
