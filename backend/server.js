@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const path = require('path');   // ✅ ADD
-const dns = require('node:dns'); // safe DNS diagnostic (SRV hostnames only)
+const dns = require('node:dns'); // DNS bootstrap fallback (SRV hostnames only)
 
 require('dotenv').config();
 
@@ -86,10 +86,16 @@ async function seedDefaultAdmin() {
 // resolver / VPN / proxy even though `nslookup ... 8.8.8.8`
 // works. This grabs the SRV hostname from MONGO_URI (host
 // only — never the user/password), resolves _mongodb._tcp,
-// and if the default resolver refuses, falls back to public
-// resolvers via dns.setServers. Only hostnames are printed.
+// and if the default resolver refuses, verifies the lookup through
+// public resolvers with a scoped dns.Resolver. If the public resolvers
+// answer and the process-wide default resolver is broken (observed as
+// `querySrv ECONNREFUSED _mongodb._tcp.<cluster>.mongodb.net`), the
+// default resolver is pointed at the public resolvers so the SRV lookup
+// performed by mongoose.connect() actually succeeds. Only hostnames are
+// printed. The default resolver is never mutated unless the fallback
+// resolvers have just proven they can answer.
 // ==========================================
-const { resolveSrv } = require('node:dns').promises;
+const { Resolver, resolveSrv } = require('node:dns').promises;
 
 function extractSrvHost(uri = '') {
   const rest = uri.replace(/^mongodb(?:\+srv)?:\/\//, '');
@@ -113,11 +119,14 @@ async function bootstrapDns() {
   } catch (err) {
     console.log(`DNS bootstrap: default resolver failed (${err.code || err.message}) — retrying via 8.8.8.8 / 1.1.1.1`);
     try {
+      const resolver = new Resolver();
+      resolver.setServers(['8.8.8.8', '1.1.1.1']);
+      const hosts = (await resolver.resolveSrv(srvName)).map((r) => r.name);
+      console.log(`DNS bootstrap ✔ resolveSrv via public resolvers → ${hosts.join(', ')}`);
       dns.setServers(['8.8.8.8', '1.1.1.1']);
-      const hosts = await attempt();
-      console.log(`DNS bootstrap ✔ resolveSrv after setServers → ${hosts.join(', ')}`);
+      console.log('DNS bootstrap: default resolver updated to public resolvers (it was broken for SRV).');
     } catch (err2) {
-      console.log(`DNS bootstrap: STILL failing after setServers (${err2.code || err2.message}). SRV lookup cannot complete; MongoDB connect may fail.`);
+      console.log(`DNS bootstrap: STILL failing via public resolvers (${err2.code || err2.message}). SRV lookup cannot complete; MongoDB connect may fail.`);
     }
   }
 }
@@ -138,8 +147,30 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// MongoDB Connection (Express always listens, even if MongoDB is
-// temporarily unreachable — /api/health stays up; app keeps running).
+// MongoDB Connection.
+// The server only starts listening AFTER the initial connection is
+// confirmed, so requests are never served against a dead database (the
+// previous fire-and-forget connect left every `User.findOne()` buffered
+// until it died with "buffering timed out after 10000ms"). Connect is
+// retried with backoff; after a successful connect the driver
+// auto-reconnects on later drops, and connection events are logged so
+// real MongoDB errors are never hidden.
+const CONNECT_ATTEMPTS = 10;
+const CONNECT_RETRY_DELAY_MS = 3000;
+
+async function connectWithRetry() {
+  for (let attempt = 1; attempt <= CONNECT_ATTEMPTS; attempt += 1) {
+    try {
+      await mongoose.connect(process.env.MONGO_URI);
+      return;
+    } catch (err) {
+      console.error(`MongoDB connection attempt ${attempt}/${CONNECT_ATTEMPTS} failed: ${err.code || err.message}`);
+      if (attempt === CONNECT_ATTEMPTS) throw err;
+      await new Promise((resolve) => setTimeout(resolve, CONNECT_RETRY_DELAY_MS));
+    }
+  }
+}
+
 async function startServer() {
   try {
     await bootstrapDns();
@@ -147,19 +178,25 @@ async function startServer() {
     console.log(`DNS bootstrap error: ${err.message}`);
   }
 
-  mongoose
-    .connect(process.env.MONGO_URI)
-    .then(async () => {
-      console.log('MongoDB Connected');
-      try {
-        await seedDefaultAdmin();
-      } catch (se) {
-        console.error('Admin seed error:', se.message);
-      }
-    })
-    .catch((err) => {
-      console.error('MongoDB Connection Error:', err);
-    });
+  mongoose.connection.on('connected', () => console.log('MongoDB Connected'));
+  mongoose.connection.on('disconnected', () =>
+    console.error('MongoDB disconnected — driver is reconnecting; requests are buffered until then')
+  );
+  mongoose.connection.on('reconnected', () => console.log('MongoDB reconnected'));
+  mongoose.connection.on('error', (err) => console.error('MongoDB connection error:', err.message));
+
+  try {
+    await connectWithRetry();
+  } catch (err) {
+    console.error('MongoDB connection failed after retries — exiting so the platform restarts cleanly. Error:', err.message);
+    process.exit(1);
+  }
+
+  try {
+    await seedDefaultAdmin();
+  } catch (se) {
+    console.error('Admin seed error:', se.message);
+  }
 
   app.listen(process.env.PORT || 5000, () => {
     console.log(`Server running on port ${process.env.PORT || 5000}`);

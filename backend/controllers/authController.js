@@ -163,6 +163,7 @@ exports.register = async (req, res) => {
         message: field === 'userId' ? 'This User ID is already registered' : 'This email is already registered',
       });
     }
+    console.error('REGISTER ERROR:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -244,6 +245,7 @@ exports.registerAdmin = async (req, res) => {
     if (error.code === 11000) {
       return res.status(400).json({ message: 'This email or User ID is already registered' });
     }
+    console.error('REGISTER ADMIN ERROR:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -315,6 +317,7 @@ exports.login = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error('LOGIN ERROR:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -368,6 +371,7 @@ exports.changePassword = async (req, res) => {
       message: 'Password changed successfully',
     });
   } catch (error) {
+    console.error('CHANGE PASSWORD ERROR:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -406,6 +410,7 @@ exports.getMe = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error('GET ME ERROR:', error);
     res.status(500).json({ message: error.message });
   }
 };
