@@ -909,7 +909,7 @@ const styles = {
   bottomGrid: {
     display: "grid",
     gridTemplateColumns:
-      "1fr 1fr",
+      "repeat(auto-fit,minmax(280px,1fr))",
     gap: "20px",
     marginTop: "30px",
   },

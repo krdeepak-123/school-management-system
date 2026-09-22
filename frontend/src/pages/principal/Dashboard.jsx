@@ -273,7 +273,7 @@ export default function PrincipalDashboard() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
           gap: "20px",
           marginTop: "30px",
         }}

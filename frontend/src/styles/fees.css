@@ -51,6 +51,11 @@
   box-shadow: 0 3px 10px rgba(0,0,0,.08);
 }
 
+.table-container .student-table {
+  width: 100%;
+  min-width: 760px;
+}
+
 .student-table {
   width: 100%;
   border-collapse: collapse;

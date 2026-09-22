@@ -15,6 +15,7 @@ const styles = {
 
   table: {
     width: "100%",
+    minWidth: "760px", // scroll horizontally on small screens
     borderCollapse: "collapse",
     fontSize: "14px",
   },

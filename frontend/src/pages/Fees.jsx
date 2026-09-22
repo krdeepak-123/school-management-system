@@ -12,6 +12,8 @@ import FeeTable from "../components/fees/FeeTable";
 import FeeSearch from "../components/fees/FeeSearch";
 import FeeModal from "../components/fees/FeeModal";
 
+import "../styles/fees.css";
+
 export default function Fees() {
   const [fees, setFees] = useState([]);
   const [search, setSearch] = useState("");

@@ -32,7 +32,7 @@ export default function ResultTable({
   // ==========================================
 
   return (
-    <div className="result-table-wrapper">
+    <div className="result-table-container">
 
       <table className="result-table">
 

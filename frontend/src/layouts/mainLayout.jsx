@@ -1,21 +1,23 @@
+import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import { Outlet } from "react-router-dom";
+import "../styles/layout.css";
 
 export default function MainLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const openSidebar = () => setSidebarOpen(true);
+  const closeSidebar = () => setSidebarOpen(false);
+
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      <Sidebar />
+    <div className="app-layout">
+      <Sidebar open={sidebarOpen} onClose={closeSidebar} />
 
-      <div
-        style={{
-          flex: 1,
-          background: "#f1f5f9",
-        }}
-      >
-        <Navbar />
+      <div className="app-main">
+        <Navbar onMenuClick={openSidebar} />
 
-        <div style={{ padding: "20px" }}>
+        <div className="app-content">
           <Outlet />
         </div>
       </div>

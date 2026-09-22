@@ -12,6 +12,8 @@ import {
   deleteClass,
 } from "../services/classService";
 
+import "../styles/classes.css";
+
 export default function Classes() {
 
   const [classes, setClasses] = useState([]);

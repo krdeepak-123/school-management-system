@@ -47,7 +47,7 @@ const DASHBOARD_PATHS = {
   director: "/director/dashboard",
 };
 
-export default function Sidebar() {
+export default function Sidebar({ open = false, onClose = () => {} }) {
   const { user } = useAuth();
 
   const role = user?.role;
@@ -57,43 +57,52 @@ export default function Sidebar() {
   );
 
   return (
-    <div style={styles.sidebar}>
-      <h2 style={styles.logo}>🏫 Paradise Kids School MS</h2>
+    <>
+      <div
+        className={`sidebar-overlay ${open ? "sidebar-overlay--visible" : ""}`}
+        onClick={onClose}
+      />
 
-      {role && (
-        <div style={styles.roleBadge}>
-          {role.charAt(0).toUpperCase() + role.slice(1)}
-        </div>
-      )}
-
-      {menus.map((item) => (
-        <NavLink
-          key={item.id}
-          to={item.path}
-          end={Boolean(item.dashboard)}
-          style={({ isActive }) => ({
-            ...styles.link,
-            background: isActive ? "#2563eb" : "transparent",
-            color: isActive ? "#fff" : "#e5e7eb",
-          })}
+      <aside className={`sidebar-drawer ${open ? "sidebar-drawer--open" : ""}`}>
+        <button
+          type="button"
+          className="sidebar-drawer-close"
+          onClick={onClose}
+          aria-label="Close menu"
         >
-          <span>{item.icon}</span>
-          <span>{item.name}</span>
-        </NavLink>
-      ))}
-    </div>
+          ✕
+        </button>
+
+        <h2 style={styles.logo}>🏫 Paradise Kids School MS</h2>
+
+        {role && (
+          <div style={styles.roleBadge}>
+            {role.charAt(0).toUpperCase() + role.slice(1)}
+          </div>
+        )}
+
+        {menus.map((item) => (
+          <NavLink
+            key={item.id}
+            to={item.path}
+            end={Boolean(item.dashboard)}
+            onClick={onClose}
+            style={({ isActive }) => ({
+              ...styles.link,
+              background: isActive ? "#2563eb" : "transparent",
+              color: isActive ? "#fff" : "#e5e7eb",
+            })}
+          >
+            <span>{item.icon}</span>
+            <span>{item.name}</span>
+          </NavLink>
+        ))}
+      </aside>
+    </>
   );
 }
 
 const styles = {
-  sidebar: {
-    width: "240px",
-    background: "#0f172a",
-    minHeight: "100vh",
-    padding: "20px",
-    boxSizing: "border-box",
-  },
-
   logo: {
     color: "#fff",
     marginBottom: "10px",

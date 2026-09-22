@@ -66,14 +66,18 @@ const styles = {
     alignItems: "center",
     height: "100vh",
     background: "#f1f5f9",
+    padding: "20px",
+    boxSizing: "border-box",
   },
 
   card: {
-    width: "420px",
+    width: "100%",
+    maxWidth: "420px",
     background: "#fff",
     padding: "30px",
     borderRadius: "12px",
     boxShadow: "0 5px 15px rgba(0,0,0,.15)",
+    boxSizing: "border-box",
   },
 
   input: {

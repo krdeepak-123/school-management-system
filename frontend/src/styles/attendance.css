@@ -94,6 +94,12 @@
 
 }
 
+.table-container .student-table {
+
+    min-width: 760px;
+
+}
+
 
 
 .student-table th {
@@ -221,13 +227,19 @@
 
 .modal-container {
 
-    width:450px;
+    width: min(450px, 100%);
 
     background:white;
 
     border-radius:15px;
 
     padding:25px;
+
+    box-sizing: border-box;
+
+    max-height: 90vh;
+
+    overflow-y: auto;
 
 }
 
@@ -324,4 +336,30 @@
 
     border-radius:12px;
 
+}
+
+/* =========================================
+   RESPONSIVE (mobile/tablet)
+   ========================================= */
+
+@media (max-width: 768px) {
+
+    .attendance-page,
+    .students-page {
+        padding: 15px;
+    }
+
+    .students-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+
+    .add-btn {
+        width: 100%;
+    }
+
+    .modal-container {
+        padding: 20px;
+    }
 }

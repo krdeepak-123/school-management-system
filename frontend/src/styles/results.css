@@ -150,12 +150,13 @@
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
-  overflow: hidden;
+  overflow-x: auto; /* keep wide tables scrollable inside the page */
   box-shadow: 0 4px 15px rgba(15, 23, 42, 0.06);
 }
 
 .result-table {
   width: 100%;
+  min-width: 950px; /* horizontal scroll instead of crushing columns */
   border-collapse: collapse;
 }
 

@@ -9,16 +9,20 @@ export default function Unauthorized() {
         justifyContent: "center",
         alignItems: "center",
         background: "#f1f5f9",
+        padding: "20px",
+        boxSizing: "border-box",
       }}
     >
       <div
         style={{
-          width: "420px",
+          width: "100%",
+          maxWidth: "420px",
           background: "#fff",
-          padding: "40px",
+          padding: "28px",
           borderRadius: "14px",
           boxShadow: "0 5px 15px rgba(0,0,0,.1)",
           textAlign: "center",
+          boxSizing: "border-box",
         }}
       >
         <div style={{ fontSize: "60px" }}>🚫</div>

@@ -53,14 +53,18 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     background: "#f1f5f9",
+    padding: "20px",
+    boxSizing: "border-box",
   },
 
   card: {
-    width: "400px",
+    width: "100%",
+    maxWidth: "400px",
     background: "#fff",
     padding: "30px",
     borderRadius: "12px",
     boxShadow: "0 0 10px rgba(0,0,0,.1)",
+    boxSizing: "border-box",
   },
 
   text: {
