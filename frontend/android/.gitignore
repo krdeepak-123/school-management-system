@@ -58,6 +58,7 @@ captures/
 *.key
 *.p12
 *.pem
+keystore.properties
 release-signing.properties
 
 # External native build folder generated in Android Studio 2.2 and later

@@ -9,6 +9,8 @@ dist/
 *.key
 *.p12
 *.pem
+keystore.properties
+release-signing.properties
 *.apk
 *.aab
 .gradle/
