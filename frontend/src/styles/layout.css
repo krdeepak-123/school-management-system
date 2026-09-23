@@ -261,3 +261,257 @@
     display: none;
   }
 }
+
+/* =========================================
+   PWA INSTALL APP BUTTONS & MODAL
+   ========================================= */
+
+/* Navbar Install Button */
+.navbar-install-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #863bff 0%, #6d28d9 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(134, 59, 255, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.navbar-install-btn:hover {
+  background: linear-gradient(135deg, #7c2ff2 0%, #5b21b6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(134, 59, 255, 0.35);
+}
+
+.navbar-install-btn:active {
+  transform: translateY(0);
+}
+
+.navbar-install-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.navbar-install-label {
+  line-height: 1;
+}
+
+@media (max-width: 599px) {
+  .navbar-install-btn {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+  .navbar-install-label {
+    display: none;
+  }
+}
+
+/* Sidebar Install Button */
+.sidebar-install-wrapper {
+  margin-bottom: 16px;
+}
+
+.sidebar-install-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(134, 59, 255, 0.4);
+  background: linear-gradient(135deg, rgba(134, 59, 255, 0.15) 0%, rgba(109, 40, 217, 0.25) 100%);
+  color: #f3e8ff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.sidebar-install-btn:hover {
+  background: linear-gradient(135deg, #863bff 0%, #6d28d9 100%);
+  color: #ffffff;
+  border-color: #863bff;
+  box-shadow: 0 4px 14px rgba(134, 59, 255, 0.3);
+}
+
+.sidebar-install-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.sidebar-install-text {
+  flex: 1;
+}
+
+/* iOS Install Instructions Modal */
+.pwa-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: pwaFadeIn 0.2s ease;
+}
+
+.pwa-modal-card {
+  background: #ffffff;
+  border-radius: 16px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: pwaSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pwa-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #faf5ff;
+}
+
+.pwa-modal-app-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pwa-modal-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.pwa-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.pwa-modal-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.pwa-modal-close {
+  background: #ede9fe;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  color: #6b21a8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.pwa-modal-close:hover {
+  background: #ddd6fe;
+}
+
+.pwa-modal-body {
+  padding: 20px;
+}
+
+.pwa-modal-intro {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.pwa-instructions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pwa-instruction-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #1e293b;
+}
+
+.pwa-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #863bff;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.pwa-inline-icon {
+  display: inline-block;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.pwa-modal-footer {
+  padding: 14px 20px 20px 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pwa-modal-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #863bff 0%, #6d28d9 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.pwa-modal-btn:hover {
+  opacity: 0.92;
+}
+
+@keyframes pwaFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pwaSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

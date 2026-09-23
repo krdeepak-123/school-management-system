@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/auth";
+import InstallAppButton from "./InstallAppButton";
 
 const ROLE_LABELS = {
   student: "Student",
@@ -39,6 +40,8 @@ export default function Navbar({ onMenuClick = () => {} }) {
       </div>
 
       <div className="navbar-right">
+        <InstallAppButton variant="navbar" />
+
         <div className="navbar-user">
           <div className="navbar-avatar">{initial}</div>
 

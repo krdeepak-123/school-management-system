@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/auth";
+import InstallAppButton from "./InstallAppButton";
 
 const ALL_MENUS = [
   { id: "dashboard", name: "Dashboard", icon: "🏠", roles: ["admin", "principal", "director"], dashboard: true },
@@ -80,6 +81,10 @@ export default function Sidebar({ open = false, onClose = () => {} }) {
             {role.charAt(0).toUpperCase() + role.slice(1)}
           </div>
         )}
+
+        <div className="sidebar-install-wrapper">
+          <InstallAppButton variant="sidebar" />
+        </div>
 
         {menus.map((item) => (
           <NavLink
