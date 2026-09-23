@@ -48,9 +48,9 @@ export default function DirectorDashboard() {
         classesRes,
         attendanceRes,
         feesData,
-        examsRes,
-        resultsRes,
-        noticesRes,
+        examsData,
+        resultsData,
+        noticesData,
       ] = await Promise.all([
         API.get(`${API_URL}/students`),
         API.get(`${API_URL}/teachers`),
@@ -66,10 +66,12 @@ export default function DirectorDashboard() {
       setTeachers(teachersRes.data?.data || []);
       setClasses(classesRes.data?.data || []);
       setAttendance(attendanceRes.data?.data || []);
+      // getFees/getExams/getResults/getNotices already
+      // return the unwrapped data arrays
       setFees(feesData || []);
-      setExams(examsRes.data?.data || []);
-      setResults(resultsRes.data?.data || []);
-      setNotices(noticesRes.data?.data || []);
+      setExams(examsData || []);
+      setResults(resultsData || []);
+      setNotices(noticesData || []);
     } catch (error) {
       console.error("Director Dashboard error:", error);
       setStudents([]);
@@ -102,7 +104,7 @@ export default function DirectorDashboard() {
   const dueFee = fees.reduce((s, f) => s + Number(f.dueAmount || 0), 0);
 
   const totalExams = exams.length;
-  const upcomingExams = exams.filter((e) => new Date(e.date) >= new Date());
+  const upcomingExams = exams.filter((e) => new Date(e.examDate) >= new Date());
 
   const totalResults = results.length;
   const passedResults = results.filter((r) => r.status === "Pass").length;
@@ -202,7 +204,7 @@ export default function DirectorDashboard() {
           <ul style={styles.list}>
             {notices.slice(0, 5).map((n) => (
               <li key={n._id}>
-                <strong>{n.title}</strong> · {n.date ? new Date(n.date).toLocaleDateString() : "-"}
+                <strong>{n.title}</strong> · {n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "-"}
               </li>
             ))}
           </ul>

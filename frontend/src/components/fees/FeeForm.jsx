@@ -8,6 +8,7 @@ export default function FeeForm({
     studentName: "",
     className: "",
     section: "",
+    rollNo: "",
     totalFee: "",
     paidAmount: "",
     paymentDate: new Date()
@@ -27,6 +28,7 @@ export default function FeeForm({
         studentName: feeData.studentName || "",
         className: feeData.className || "",
         section: feeData.section || "",
+        rollNo: feeData.rollNo || "",
         totalFee: feeData.totalFee ?? "",
         paidAmount: feeData.paidAmount ?? "",
         paymentDate: feeData.paymentDate
@@ -107,16 +109,12 @@ export default function FeeForm({
       studentName: fee.studentName,
       className: fee.className,
       section: fee.section,
+      rollNo: fee.rollNo,
       totalFee: Number(fee.totalFee),
       paidAmount: Number(fee.paidAmount),
       paymentDate: fee.paymentDate,
       paymentMode: fee.paymentMode,
     };
-
-    console.log(
-      "Fee Data Sending =",
-      feeDataToSave
-    );
 
     onSave(feeDataToSave);
   };
@@ -192,6 +190,27 @@ export default function FeeForm({
           onChange={handleChange}
           placeholder="Enter section"
           required
+        />
+
+      </div>
+
+      {/* ==================================
+          ROLL NUMBER (optional — used to
+          match the fee to a student account)
+      ================================== */}
+
+      <div className="form-group">
+
+        <label>
+          Roll Number
+        </label>
+
+        <input
+          type="text"
+          name="rollNo"
+          value={fee.rollNo}
+          onChange={handleChange}
+          placeholder="Student roll number (optional)"
         />
 
       </div>
@@ -278,16 +297,12 @@ export default function FeeForm({
             Cash
           </option>
 
+          <option value="Online">
+            Online
+          </option>
+
           <option value="UPI">
             UPI
-          </option>
-
-          <option value="Card">
-            Card
-          </option>
-
-          <option value="Bank Transfer">
-            Bank Transfer
           </option>
 
           <option value="Cheque">

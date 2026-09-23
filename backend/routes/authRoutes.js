@@ -6,6 +6,7 @@ const {
   registerAdmin,
   login,
   getMe,
+  updateMe,
   changePassword,
 } = require('../controllers/authController');
 
@@ -41,6 +42,11 @@ router.post('/logout', (req, res) => {
 // CURRENT USER PROFILE
 // ==========================================
 router.get('/me', protect, getMe);
+
+// ==========================================
+// UPDATE CURRENT USER PROFILE
+// ==========================================
+router.put('/me', protect, updateMe);
 
 // ==========================================
 // CHANGE PASSWORD (any logged-in user)

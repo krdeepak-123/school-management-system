@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/auth";
 import { getMyTeacherClasses } from "../../services/classService";
-import { getMyAssignments, addAssignment } from "../../services/assignmentService";
+import { getAssignments, addAssignment } from "../../services/assignmentService";
 import styles from "./teacherStyles";
 
 export default function Assignments() {
@@ -23,14 +23,22 @@ export default function Assignments() {
   });
 
   useEffect(() => {
-    Promise.all([getMyAssignments(), getMyTeacherClasses()])
-      .then(([assignmentData, classData]) => {
-        setAssignments(assignmentData || []);
-        setClasses(classData || []);
+    // Load the list and the class dropdown independently so a failure
+    // in one (e.g. teacher-mine resolving no classes) never blanks
+    // the whole page.
+    Promise.allSettled([getAssignments(), getMyTeacherClasses()])
+      .then(([assignmentResult, classResult]) => {
+        setAssignments(assignmentResult.value || []);
+        setClasses(classResult.value || []);
+        if (classResult.status === "rejected") {
+          console.warn("Could not load your classes:", classResult.reason);
+        }
+        if (assignmentResult.status === "rejected") {
+          setError("Could not load assignments — please try again");
+        } else if ((classResult.value || []).length === 0) {
+          setError("No classes are assigned to your account. Contact administration to assign you a class before creating assignments.");
+        }
       })
-      .catch((err) =>
-        setError(err.response?.data?.message || "Could not load assignments")
-      )
       .finally(() => setLoading(false));
   }, []);
 
@@ -62,7 +70,7 @@ export default function Assignments() {
         subject: "",
         dueDate: "",
       });
-      const data = await getMyAssignments();
+      const data = await getAssignments();
       setAssignments(data || []);
     } catch (err) {
       setError(err.response?.data?.message || "Could not create the assignment");

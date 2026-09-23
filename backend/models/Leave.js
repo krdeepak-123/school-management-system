@@ -46,9 +46,12 @@ const leaveSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // Class applies to student leaves. Teachers have
+    // no class — the apply controller leaves it empty
+    // for teacher applications.
     className: {
       type: String,
-      required: true,
+      default: "",
       trim: true,
     },
 

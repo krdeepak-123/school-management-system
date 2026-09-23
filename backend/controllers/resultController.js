@@ -98,7 +98,7 @@ exports.createResult = async (
     // only enter marks for their assigned classes
     if (req.user.role === "teacher") {
       const { getTeacherAccess, isClassAssigned } = require("../utils/teacherAccess");
-      const access = await getTeacherAccess(req.user.linkedId);
+      const access = await getTeacherAccess(req.user);
 
       if (!access) {
         return res.status(403).json({
@@ -338,7 +338,7 @@ exports.getMyTeacherResults = async (req, res) => {
     }
 
     const { getTeacherAccess } = require("../utils/teacherAccess");
-    const access = await getTeacherAccess(req.user.linkedId);
+    const access = await getTeacherAccess(req.user);
 
     if (!access) {
       return res.status(404).json({
@@ -566,7 +566,7 @@ exports.updateResult = async (
       }
 
       const { getTeacherAccess, isClassAssigned } = require("../utils/teacherAccess");
-      const access = await getTeacherAccess(req.user.linkedId);
+      const access = await getTeacherAccess(req.user);
 
       if (!access) {
         return res.status(403).json({

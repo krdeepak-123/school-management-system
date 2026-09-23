@@ -1,5 +1,4 @@
 const Teacher = require("../models/Teacher");
-console.log("✅ NEW TEACHER CONTROLLER LOADED");
 
 // ==========================================
 // Generate Employee ID
@@ -26,7 +25,6 @@ const generateTeacherId = async () => {
 // CREATE TEACHER
 // ==========================================
 exports.createTeacher = async (req, res) => {
-   console.log("BODY =", req.body);
   try {
     const teacherData = {
       ...req.body,
@@ -107,7 +105,6 @@ exports.createTeacher = async (req, res) => {
     if (req.file) {
       teacherData.photo = `uploads/${req.file.filename}`;
     }
-    console.log("Teacher Data =", teacherData);
     const teacher = await Teacher.create(teacherData);
 
     res.status(201).json({
@@ -133,8 +130,6 @@ exports.getTeachers = async (req, res) => {
     const teachers = await Teacher.find().sort({
       createdAt: -1,
     });
-
-    console.log("Teachers =", teachers);
 
     res.status(200).json({
       success: true,

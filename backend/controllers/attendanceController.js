@@ -1,7 +1,8 @@
 const Attendance = require("../models/Attendance");
 const Student = require("../models/Student");
 
-console.log("✅ ATTENDANCE CONTROLLER LOADED");
+const escapeRegex = (value) =>
+  String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // ==========================================
 // Generate Attendance ID
@@ -34,8 +35,6 @@ const generateAttendanceId = async () => {
 // ==========================================
 exports.createAttendance = async (req, res) => {
   try {
-    console.log("Attendance Body =", req.body);
-
     const attendanceData = {
       ...req.body,
     };
@@ -43,7 +42,7 @@ exports.createAttendance = async (req, res) => {
     // Teacher class-scope enforcement
     if (req.user.role === "teacher") {
       const { getTeacherAccess, isClassAssigned } = require("../utils/teacherAccess");
-      const access = await getTeacherAccess(req.user.linkedId);
+      const access = await getTeacherAccess(req.user);
 
       if (!access) {
         return res.status(403).json({
@@ -64,10 +63,44 @@ exports.createAttendance = async (req, res) => {
     attendanceData.attendanceId =
       await generateAttendanceId();
 
-    console.log(
-      "Generated Attendance ID =",
-      attendanceData.attendanceId
-    );
+    // ==========================================
+    // Duplicate guard: one record per student per
+    // class/date. Re-marking the same day updates
+    // the existing record instead of creating a
+    // duplicate row.
+    // ==========================================
+    const recordDate = new Date(attendanceData.date);
+    if (isNaN(recordDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date provided",
+      });
+    }
+
+    const dayStart = new Date(recordDate);
+    dayStart.setUTCHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
+
+    const existingRecord = await Attendance.findOne({
+      className: new RegExp(`^${escapeRegex(attendanceData.className)}$`, "i"),
+      section: new RegExp(`^${escapeRegex(attendanceData.section || "")}$`, "i"),
+      rollNo: attendanceData.rollNo,
+      date: { $gte: dayStart, $lt: dayEnd },
+    });
+
+    if (existingRecord) {
+      existingRecord.studentName =
+        attendanceData.studentName || existingRecord.studentName;
+      existingRecord.status = attendanceData.status || existingRecord.status;
+      await existingRecord.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Attendance updated successfully (a record for this date already existed)",
+        data: existingRecord,
+      });
+    }
 
     const attendance =
       await Attendance.create(attendanceData);
@@ -124,7 +157,7 @@ exports.getMyTeacherAttendance = async (req, res) => {
     }
 
     const { getTeacherAccess } = require("../utils/teacherAccess");
-    const access = await getTeacherAccess(req.user.linkedId);
+    const access = await getTeacherAccess(req.user);
 
     if (!access) {
       return res.status(404).json({
@@ -190,7 +223,7 @@ exports.getMyAttendance = async (req, res) => {
 
     if (req.user.role === "teacher") {
       const { getTeacherAccess } = require("../utils/teacherAccess");
-      const access = await getTeacherAccess(req.user.linkedId);
+      const access = await getTeacherAccess(req.user);
 
       if (!access || access.classes.length === 0) {
         return res.status(200).json({ success: true, count: 0, data: [] });
@@ -274,7 +307,7 @@ exports.updateAttendance = async (req, res) => {
     // Teacher class-scope enforcement
     if (req.user.role === "teacher") {
       const { getTeacherAccess, isClassAssigned } = require("../utils/teacherAccess");
-      const access = await getTeacherAccess(req.user.linkedId);
+      const access = await getTeacherAccess(req.user);
 
       if (!access) {
         return res.status(403).json({
@@ -339,9 +372,7 @@ exports.updateAttendance = async (req, res) => {
 exports.deleteAttendance = async (req, res) => {
   try {
     const attendance =
-      await Attendance.findByIdAndDelete(
-        req.params.id
-      );
+      await Attendance.findById(req.params.id);
 
     if (!attendance) {
       return res.status(404).json({
@@ -349,6 +380,28 @@ exports.deleteAttendance = async (req, res) => {
         message: "Attendance Not Found",
       });
     }
+
+    // Teacher class-scope enforcement
+    if (req.user.role === "teacher") {
+      const { getTeacherAccess, isClassAssigned } = require("../utils/teacherAccess");
+      const access = await getTeacherAccess(req.user);
+
+      if (!access) {
+        return res.status(403).json({
+          success: false,
+          message: "No teacher record is linked to your account",
+        });
+      }
+
+      if (!isClassAssigned(access.classes, attendance.className, attendance.section)) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only delete attendance for your assigned classes",
+        });
+      }
+    }
+
+    await attendance.deleteOne();
 
     res.status(200).json({
       success: true,

@@ -55,7 +55,7 @@ export default function PrincipalDashboard() {
         API.get(`${API_URL}/classes`),
       ]);
 
-      const [attendanceRes, feeData, examsRes, resultsRes, noticesRes, timetablesRes] = await Promise.all([
+      const [attendanceRes, feeData, examsData, resultsData, noticesData, timetablesData] = await Promise.all([
         API.get(`${API_URL}/attendance`),
         getFees(),
         getExams(),
@@ -64,15 +64,17 @@ export default function PrincipalDashboard() {
         getTimetables(),
       ]);
 
+      // getFees/getExams/getResults/getNotices/getTimetables
+      // already return the unwrapped data arrays
       setStudents(studentsRes.data?.data || []);
       setTeachers(teachersRes.data?.data || []);
       setClasses(classesRes.data?.data || []);
       setAttendance(attendanceRes.data?.data || []);
       setFees(feeData || []);
-      setExams(examsRes.data?.data || []);
-      setResults(resultsRes.data?.data || []);
-      setNotices(noticesRes.data?.data || []);
-      setTimetables(timetablesRes.data?.data || []);
+      setExams(examsData || []);
+      setResults(resultsData || []);
+      setNotices(noticesData || []);
+      setTimetables(timetablesData || []);
     } catch (error) {
       console.error("Principal Dashboard Error:", error);
       setStudents([]);
@@ -108,7 +110,7 @@ export default function PrincipalDashboard() {
   const dueFee = fees.reduce((s, f) => s + Number(f.dueAmount || 0), 0);
 
   const totalExams = exams.length;
-  const upcomingExams = exams.filter((e) => new Date(e.date) >= new Date());
+  const upcomingExams = exams.filter((e) => new Date(e.examDate) >= new Date());
 
   const totalResults = results.length;
   const passedResults = results.filter((r) => r.status === "Pass").length;

@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { getMyTeacherClasses } from "../../services/classService";
+import { useAuth } from "../../context/auth";
+import { getMyTeacherClasses, getClasses } from "../../services/classService";
 import { getExams, addExam, updateExam } from "../../services/examService";
 import styles from "./teacherStyles";
 
 export default function Exams() {
+  const { user } = useAuth();
   const [exams, setExams] = useState([]);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,16 +24,19 @@ export default function Exams() {
   });
 
   useEffect(() => {
-    Promise.all([getExams(), getMyTeacherClasses()])
-      .then(([examData, classData]) => {
+    // Teachers see only their assigned classes; other
+    // staff see all classes (same split as the API)
+    const isTeacher = user?.role === "teacher";
+    Promise.all([getExams(), isTeacher ? getMyTeacherClasses() : getClasses()])
+      .then(([examData, classRes]) => {
         setExams(examData || []);
-        setClasses(classData || []);
+        setClasses(Array.isArray(classRes) ? classRes : classRes?.data?.data || []);
       })
       .catch((err) =>
         setError(err.response?.data?.message || "Could not load exams")
       )
       .finally(() => setLoading(false));
-  }, []);
+  }, [user?.role]);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -142,7 +147,7 @@ export default function Exams() {
     <div>
       <h1 style={styles.heading}>🧪 Exams</h1>
       <p style={styles.sub}>
-        Create exams for your assigned classes and manage exam schedules.
+        Create exams and manage exam schedules.
       </p>
 
       {success && <div style={styles.successBanner}>✅ {success}</div>}

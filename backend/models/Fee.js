@@ -26,6 +26,13 @@ section: {
   trim: true,
 },
 
+// Admission roll number so students can match their own fees
+rollNo: {
+  type: String,
+  default: "",
+  trim: true,
+},
+
 totalFee: {
   type: Number,
   required: true,

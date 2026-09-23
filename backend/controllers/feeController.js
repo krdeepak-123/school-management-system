@@ -27,14 +27,12 @@ return `FEE${String(nextNumber).padStart(3, "0")}`;
 // ==========================================
 exports.createFee = async (req, res) => {
 try {
-console.log("🔥 CREATE FEE API HIT");
-console.log("🔥 FEE BODY =", req.body);
-
 
 const {
   studentName,
   className,
   section,
+  rollNo,
   totalFee,
   paidAmount,
   paymentDate,
@@ -73,7 +71,9 @@ if (paid > total) {
 
 const dueAmount = total - paid;
 
-let status = "Pending";
+// "Due" is the model's enum value for unpaid fees
+// (the previous "Pending" value failed validation)
+let status = "Due";
 
 if (paid === total) {
   status = "Paid";
@@ -88,6 +88,7 @@ const fee = await Fee.create({
   studentName,
   className,
   section,
+  rollNo: rollNo ?? "",
   totalFee: total,
   paidAmount: paid,
   dueAmount,
@@ -128,10 +129,27 @@ exports.getMyFees = async (req, res) => {
         return res.status(200).json({ success: true, count: 0, data: [] });
       }
 
+      // Match by class + section and rollNo (falling back to the student
+      // name for fees recorded before the rollNo field existed).
+      const or = [
+        {
+          studentName: new RegExp(
+            `^${String(student.name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+            "i"
+          ),
+        },
+      ];
+
+      if (student.rollNo) {
+        // The rollNo may be stored as a number or a string —
+        // match either representation.
+        or.unshift({ rollNo: { $in: [student.rollNo, String(student.rollNo)] } });
+      }
+
       const fees = await Fee.find({
         className: student.className,
         section: student.section,
-        rollNo: student.rollNo,
+        $or: or,
       }).sort({ createdAt: -1 });
 
       return res.status(200).json({
@@ -223,19 +241,40 @@ res.status(500).json({
 // ==========================================
 exports.updateFee = async (req, res) => {
 try {
+
+const existing = await Fee.findById(req.params.id);
+
+if (!existing) {
+  return res.status(404).json({
+    success: false,
+    message: "Fee Not Found",
+  });
+}
+
 const {
 studentName,
 className,
 section,
+rollNo,
 totalFee,
 paidAmount,
 paymentDate,
 paymentMode,
 } = req.body;
 
+const total = Number(
+  totalFee !== undefined ? totalFee : existing.totalFee
+);
+const paid = Number(
+  paidAmount !== undefined ? paidAmount : existing.paidAmount
+);
 
-const total = Number(totalFee);
-const paid = Number(paidAmount);
+if (isNaN(total) || isNaN(paid)) {
+  return res.status(400).json({
+    success: false,
+    message: "Total Fee and Paid Amount must be numbers",
+  });
+}
 
 if (paid > total) {
   return res.status(400).json({
@@ -246,7 +285,7 @@ if (paid > total) {
 
 const dueAmount = total - paid;
 
-let status = "Pending";
+let status = "Due";
 
 if (paid === total) {
   status = "Paid";
@@ -254,36 +293,23 @@ if (paid === total) {
   status = "Partial";
 }
 
-const fee = await Fee.findByIdAndUpdate(
-  req.params.id,
-  {
-    studentName,
-    className,
-    section,
-    totalFee: total,
-    paidAmount: paid,
-    dueAmount,
-    paymentDate,
-    paymentMode,
-    status,
-  },
-  {
-    new: true,
-    runValidators: true,
-  }
-);
+existing.studentName = studentName !== undefined ? studentName : existing.studentName;
+existing.className = className !== undefined ? className : existing.className;
+existing.section = section !== undefined ? section : existing.section;
+existing.rollNo = rollNo !== undefined ? rollNo : existing.rollNo || "";
+existing.totalFee = total;
+existing.paidAmount = paid;
+existing.dueAmount = dueAmount;
+existing.paymentDate = paymentDate || existing.paymentDate;
+existing.paymentMode = paymentMode !== undefined ? paymentMode : existing.paymentMode;
+existing.status = status;
 
-if (!fee) {
-  return res.status(404).json({
-    success: false,
-    message: "Fee Not Found",
-  });
-}
+await existing.save();
 
 res.status(200).json({
   success: true,
   message: "Fee Updated Successfully",
-  data: fee,
+  data: existing,
 });
 
 

@@ -525,6 +525,16 @@ export default function AppRoutes() {
             </RoleRoute>
           }
         />
+
+        {/* Exams (same permissions as the backend API) */}
+        <Route
+          path="/exams"
+          element={
+            <RoleRoute roles={["admin", "principal", "director"]}>
+              <TeacherExams />
+            </RoleRoute>
+          }
+        />
       </Route>
 
       {/* Fallback */}

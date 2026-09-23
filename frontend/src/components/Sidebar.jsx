@@ -44,7 +44,7 @@ const ALL_MENUS = [
 // Role-specific dashboard URLs (mirrors the backend role)
 const DASHBOARD_PATHS = {
   admin: "/admin/dashboard",
-  principals: "/principal/dashboard",
+  principal: "/principal/dashboard",
   director: "/director/dashboard",
 };
 

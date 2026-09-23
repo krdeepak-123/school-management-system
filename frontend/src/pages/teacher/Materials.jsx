@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/auth";
 import { getMyTeacherClasses } from "../../services/classService";
-import { getMyMaterials, addMaterial } from "../../services/materialService";
+import { getMaterials, addMaterial } from "../../services/materialService";
 import styles from "./teacherStyles";
 
 export default function Materials() {
@@ -23,7 +23,7 @@ export default function Materials() {
   });
 
   useEffect(() => {
-    Promise.all([getMyMaterials(), getMyTeacherClasses()])
+    Promise.all([getMaterials(), getMyTeacherClasses()])
       .then(([materialData, classData]) => {
         setMaterials(materialData || []);
         setClasses(classData || []);
@@ -62,7 +62,7 @@ export default function Materials() {
         subject: "",
         link: "",
       });
-      const data = await getMyMaterials();
+      const data = await getMaterials();
       setMaterials(data || []);
     } catch (err) {
       setError(err.response?.data?.message || "Could not share the material");

@@ -4,7 +4,7 @@ import { getMyTeacherClasses } from "../services/classService";
 import { getMyTeacherSubjects } from "../services/subjectService";
 import { getMyTeacherStudents } from "../services/studentService";
 import { getMyTeacherAttendance } from "../services/attendanceService";
-import { getMyAssignments } from "../services/assignmentService";
+import { getAssignments } from "../services/assignmentService";
 import { getExams } from "../services/examService";
 import { getTimetables } from "../services/timetableService";
 import { getNotices } from "../services/noticeService";
@@ -45,7 +45,7 @@ export default function TeacherDashboard() {
       getMyTeacherSubjects(),
       getMyTeacherStudents(),
       getMyTeacherAttendance(),
-      getMyAssignments(),
+      getAssignments(),
       getExams(),
       getTimetables(),
       getNotices(),

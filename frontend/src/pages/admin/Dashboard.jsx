@@ -7,7 +7,6 @@ import { getFees } from "../../services/feeService";
 import { getExams } from "../../services/examService";
 import { getResults } from "../../services/resultService";
 import { getNotices } from "../../services/noticeService";
-import { getTimetables } from "../../services/timetableService";
 import { getAttendance } from "../../services/attendanceService";
 
 import { statCard, quickAction, boxStyle, welcome, btnInline } from "./dashboardHelper";
@@ -15,7 +14,7 @@ import styles from "./directorStyles";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
-export default function DirectorDashboard() {
+export default function AdminDashboard() {
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -48,9 +47,9 @@ export default function DirectorDashboard() {
         classesRes,
         attendanceRes,
         feesData,
-        examsRes,
-        resultsRes,
-        noticesRes,
+        examsData,
+        resultsData,
+        noticesData,
       ] = await Promise.all([
         API.get(`${API_URL}/students`),
         API.get(`${API_URL}/teachers`),
@@ -66,10 +65,12 @@ export default function DirectorDashboard() {
       setTeachers(teachersRes.data?.data || []);
       setClasses(classesRes.data?.data || []);
       setAttendance(attendanceRes.data?.data || []);
+      // getFees/getExams/getResults/getNotices already
+      // return the unwrapped data arrays
       setFees(feesData || []);
-      setExams(examsRes.data?.data || []);
-      setResults(resultsRes.data?.data || []);
-      setNotices(noticesRes.data?.data || []);
+      setExams(examsData || []);
+      setResults(resultsData || []);
+      setNotices(noticesData || []);
     } catch (error) {
       console.error("Director Dashboard error:", error);
       setStudents([]);
@@ -102,7 +103,7 @@ export default function DirectorDashboard() {
   const dueFee = fees.reduce((s, f) => s + Number(f.dueAmount || 0), 0);
 
   const totalExams = exams.length;
-  const upcomingExams = exams.filter((e) => new Date(e.date) >= new Date());
+  const upcomingExams = exams.filter((e) => new Date(e.examDate) >= new Date());
 
   const totalResults = results.length;
   const passedResults = results.filter((r) => r.status === "Pass").length;
@@ -128,7 +129,7 @@ export default function DirectorDashboard() {
 
   return (
     <div>
-      <h1 style={styles.heading}>🏛️ Director Dashboard</h1>
+      <h1 style={styles.heading}>🏛️ Admin Dashboard</h1>
       <p style={styles.sub}>School-wide overview — live data from the same APIs every portal uses</p>
 
       {/* WELCOME BANNER */}
@@ -202,7 +203,7 @@ export default function DirectorDashboard() {
           <ul style={styles.list}>
             {notices.slice(0, 5).map((n) => (
               <li key={n._id}>
-                <strong>{n.title}</strong> · {n.date ? new Date(n.date).toLocaleDateString() : "-"}
+                <strong>{n.title}</strong> · {n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "-"}
               </li>
             ))}
           </ul>

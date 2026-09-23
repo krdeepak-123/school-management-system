@@ -27,13 +27,14 @@ export default function AttendanceForm({
 
         const data = await getStudents();
 
-        console.log("Students Loaded =", data);
-
         setStudents(data || []);
       } catch (error) {
         console.error("Student Load Error =", error);
 
-        alert("Students load nahi ho rahe hain.");
+        alert(
+          error.response?.data?.message ||
+          "Unable to load students. Please try again."
+        );
       } finally {
         setLoadingStudents(false);
       }
@@ -80,8 +81,6 @@ export default function AttendanceForm({
     const student = students.find(
       (item) => item.name === name
     );
-
-    console.log("Selected Student =", student);
 
     if (student) {
       setAttendance({
@@ -137,8 +136,6 @@ export default function AttendanceForm({
       alert("Please select date");
       return;
     }
-
-    console.log("Attendance Data =", attendance);
 
     onSave(attendance);
   };
@@ -251,8 +248,8 @@ export default function AttendanceForm({
           Absent
         </option>
 
-        <option value="Leave">
-          Leave
+        <option value="Late">
+          Late
         </option>
       </select>
 

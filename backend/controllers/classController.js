@@ -213,12 +213,16 @@ exports.getMyTeacherClasses = async (req, res) => {
     }
 
     const { getTeacherAccess } = require("../utils/teacherAccess");
-    const access = await getTeacherAccess(req.user.linkedId);
+    const access = await getTeacherAccess(req.user);
 
     if (!access) {
-      return res.status(404).json({
-        success: false,
-        message: "No teacher record is linked to your account",
+      // No teacher record found — report an empty list instead of
+      // failing the whole request so the UI can show a useful message.
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: [],
+        message: "No classes are assigned to your account",
       });
     }
 

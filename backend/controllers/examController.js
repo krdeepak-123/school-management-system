@@ -31,7 +31,7 @@ exports.createExam = async (req, res) => {
     // only create exams for their assigned classes
     if (req.user.role === "teacher") {
       const { getTeacherAccess, isClassAssigned } = require("../utils/teacherAccess");
-      const access = await getTeacherAccess(req.user.linkedId);
+      const access = await getTeacherAccess(req.user);
 
       if (!access) {
         return res.status(403).json({
@@ -161,7 +161,7 @@ exports.updateExam = async (req, res) => {
       }
 
       const { getTeacherAccess, isClassAssigned } = require("../utils/teacherAccess");
-      const access = await getTeacherAccess(req.user.linkedId);
+      const access = await getTeacherAccess(req.user);
 
       if (!access) {
         return res.status(403).json({

@@ -312,6 +312,7 @@ exports.login = async (req, res) => {
         mobile: user.mobile,
         role: user.role,
         status: user.status,
+        address: user.address || "",
         linkedData,
         token: generateToken(user._id, user.role),
       },
@@ -405,12 +406,70 @@ exports.getMe = async (req, res) => {
         mobile: user.mobile,
         role: user.role,
         status: user.status,
+        address: user.address || "",
         linkedData,
         createdAt: user.createdAt,
       },
     });
   } catch (error) {
     console.error('GET ME ERROR:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ==========================================
+// UPDATE LOGGED-IN PROFILE
+// Only harmless account fields (name, mobile,
+// address) can be changed by the account owner.
+// ==========================================
+exports.updateMe = async (req, res) => {
+  try {
+    let user = await User.findById(req.user.id);
+    if (!user) user = await Admin.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const { name, mobile, address } = req.body;
+
+    if (name !== undefined && String(name).trim()) {
+      user.name = String(name).trim();
+    }
+
+    if (mobile !== undefined && String(mobile).trim()) {
+      if (!isValidMobile(mobile)) {
+        return res.status(400).json({ message: 'Mobile number must be 10-15 digits' });
+      }
+      user.mobile = String(mobile).trim();
+    }
+
+    if (address !== undefined) {
+      user.address = String(address).trim();
+    }
+
+    await user.save();
+
+    const isLegacyAdmin = !(user instanceof User);
+    const linkedData = isLegacyAdmin ? null : await loadLinkedData(user);
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        _id: user._id,
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role,
+        status: user.status,
+        address: user.address || "",
+        linkedData,
+      },
+    });
+  } catch (error) {
+    console.error('UPDATE ME ERROR:', error);
     res.status(500).json({ message: error.message });
   }
 };

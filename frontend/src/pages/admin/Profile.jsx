@@ -7,14 +7,14 @@ import styles from "./directorStyles";
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 // =====================================
-// DIRECTOR PROFILE
+// ADMIN PROFILE
 // Reuses the authenticated user from the
 // same auth context every portal uses —
 // shows real account data, allows editing
 // harmless fields (name, mobile, address).
 // =====================================
 
-export default function DirectorProfile() {
+export default function AdminProfile() {
   const { user, refreshProfile } = useAuth();
   const updateUser = useAuthUpdate();
 
@@ -38,7 +38,7 @@ export default function DirectorProfile() {
   const handleSave = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess(falseipse);
+    setSuccess(false);
     setSaving(true);
 
     try {
@@ -58,8 +58,8 @@ export default function DirectorProfile() {
 
   return (
     <div>
-      <h1 style={styles.heading}>👤 Director Profile</h1>
-      <p style={styles.sub}>Your director account details.</p>
+      <h1 style={styles.heading}>👤 Admin Profile</h1>
+      <p style={styles.sub}>Your administrator account details.</p>
 
       {success && <p style={{ ...styles.success, marginTop: "10px" }}>✅ Profile updated.</p>}
       {error && <p style={{ ...styles.error, marginTop: "10px" }}>{error}</p>}
@@ -75,7 +75,7 @@ export default function DirectorProfile() {
         </div>
         <div style={styles.infoRow}>
           <span style={styles.infoLabel}>Role</span>
-          <span style={styles.infoValue}>{user?.role?.toUpperCase() || "DIRECTOR"}</span>
+          <span style={styles.infoValue}>{user?.role?.toUpperCase() || "ADMIN"}</span>
         </div>
         <div style={styles.infoRow}>
           <span style={styles.infoLabel}>Mobile</span>

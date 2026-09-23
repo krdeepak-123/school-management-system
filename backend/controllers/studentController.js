@@ -22,6 +22,12 @@ exports.createStudent = async (req, res) => {
       data: student,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "A student with this Admission No already exists",
+      });
+    }
     res.status(400).json({
       success: false,
       message: error.message,
@@ -158,7 +164,7 @@ exports.getMyTeacherStudents = async (req, res) => {
     }
 
     const { getTeacherAccess } = require("../utils/teacherAccess");
-    const access = await getTeacherAccess(req.user.linkedId);
+    const access = await getTeacherAccess(req.user);
 
     if (!access) {
       return res.status(404).json({

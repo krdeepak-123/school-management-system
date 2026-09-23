@@ -23,7 +23,7 @@ export default function Timetable() {
     Promise.all([getMyTeacherClasses(), getTimetables()])
       .then(([classData, ttData]) => {
         setClasses(classData || []);
-        setTimetable((ttData?.data?.data || ttData?.data || []));
+        setTimetable(ttData || []);
       })
       .catch((err) =>
         setError(err.response?.data?.message || "Could not load the timetable")

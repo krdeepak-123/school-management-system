@@ -38,7 +38,7 @@ export default function DirectorProfile() {
   const handleSave = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess(falseipse);
+    setSuccess(false);
     setSaving(true);
 
     try {

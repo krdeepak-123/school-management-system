@@ -74,7 +74,6 @@ export default function TeacherForm({ onSave, teacherData }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Teacher Data =", teacher);
 
    if (
   !teacher.name ||
@@ -104,7 +103,7 @@ teacher.email = teacher.email.toLowerCase();
   const handleReset = () => {
     setTeacher({
       ...emptyTeacher,
-      teacherId: generateTeacherId(),
+      teacherId: "",
     });
   };
 

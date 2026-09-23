@@ -26,18 +26,19 @@ export default function AuthProvider({ children }) {
     }
   }, []);
 
-  // Update harmless account fields (name, mobile, address) locally,
-  // then reconcile with the server's /auth/me truth so linkedData
-  // stays in sync — same pattern Profile pages use everywhere.
+  // Persist harmless account fields (name, mobile, address) to the
+  // server, then sync the local session with the returned profile so
+  // every portal re-renders the fresh values.
   const updateUser = useCallback(async (patch) => {
+    const res = await API.put("/auth/me", patch);
+    const data = res.data.data;
     setUser((prev) => {
-      const merged = { ...prev, ...patch };
+      const merged = { ...prev, ...data };
       localStorage.setItem("sms_user", JSON.stringify(merged));
       return merged;
     });
-    await refreshProfile();
     return true;
-  }, [refreshProfile]);
+  }, []);
 
   const login = async (identifier, password) => {
     const res = await API.post("/auth/login", { identifier, password });

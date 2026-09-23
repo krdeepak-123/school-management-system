@@ -56,7 +56,7 @@ const timetableSchema = new mongoose.Schema(
 
     section: {
       type: String,
-      required: true,
+      default: "",
       trim: true,
     },
 

@@ -10,9 +10,35 @@ const norm = (v) => (v === undefined || v === null ? "" : String(v).trim().toLow
 // Returns { teacher, classes } for a logged-in
 // teacher. classes = Class docs assigned to them
 // via the existing classTeacher name field.
+//
+// The teacher record is resolved resiliently:
+//  1. the account's linkedId (normal case)
+//  2. the account's userId == Teacher.teacherId
+//     (covers accounts where linkedId is missing)
+//  3. the account's email (last resort)
 // ==========================================
-const getTeacherAccess = async (linkedId) => {
-  const teacher = await Teacher.findById(linkedId);
+const resolveTeacherRecord = async (user) => {
+  if (!user) return null;
+
+  let teacher = null;
+
+  if (user.linkedId) {
+    teacher = await Teacher.findById(user.linkedId);
+  }
+
+  if (!teacher && user.userId) {
+    teacher = await Teacher.findOne({ teacherId: user.userId });
+  }
+
+  if (!teacher && user.email) {
+    teacher = await Teacher.findOne({ email: user.email });
+  }
+
+  return teacher;
+};
+
+const getTeacherAccess = async (user) => {
+  const teacher = await resolveTeacherRecord(user);
   if (!teacher) return null;
 
   const nameRegex = new RegExp(`^${escapeRegex(teacher.name)}$`, "i");
