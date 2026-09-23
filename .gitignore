@@ -15,3 +15,6 @@ release-signing.properties
 *.aab
 .gradle/
 local.properties
+
+# runtime server logs (may contain personal data)
+*.log
