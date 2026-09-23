@@ -2,3 +2,14 @@ node_modules/
 .env
 *.env
 dist/
+
+# Android build and keystore files
+*.jks
+*.keystore
+*.key
+*.p12
+*.pem
+*.apk
+*.aab
+.gradle/
+local.properties
