@@ -8,6 +8,8 @@ const {
   getMe,
   updateMe,
   changePassword,
+  forgotPassword,
+  resetPasswordWithOtp,
 } = require('../controllers/authController');
 
 const { protect, authorizeRoles } = require('../middleware/authMiddleware');
@@ -28,6 +30,16 @@ router.post('/register-admin', protect, authorizeRoles('admin'), registerAdmin);
 // LOGIN
 // ==========================================
 router.post('/login', login);
+
+// ==========================================
+// FORGOT PASSWORD (request OTP)
+// ==========================================
+router.post('/forgot-password', forgotPassword);
+
+// ==========================================
+// RESET PASSWORD (verify OTP + set new password)
+// ==========================================
+router.post('/reset-password', resetPasswordWithOtp);
 
 // ==========================================
 // LOGOUT (JWT is stateless — the client

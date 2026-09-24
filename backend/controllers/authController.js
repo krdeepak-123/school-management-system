@@ -1,8 +1,10 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
 const Admin = require('../models/Admin');
 const Student = require('../models/Student');
 const Teacher = require('../models/Teacher');
+const PasswordReset = require('../models/PasswordReset');
 
 const generateToken = (id, role) =>
   jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -472,4 +474,122 @@ exports.updateMe = async (req, res) => {
     console.error('UPDATE ME ERROR:', error);
     res.status(500).json({ message: error.message });
   }
+};
+
+// ==========================================
+// FORGOT PASSWORD (request OTP)
+// Generates a 6-digit OTP with a 10-minute
+// expiry and "sends" it through sendOtpEmail.
+// The response never reveals whether the email
+// exists, so accounts cannot be enumerated.
+// ==========================================
+exports.forgotPassword = async (req, res) => {
+  try {
+    const email = String((req.body.email || '').trim()).toLowerCase();
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Invalid email address' });
+    }
+
+    let account = await User.findOne({ email });
+    if (!account) account = await Admin.findOne({ email });
+
+    if (!account) {
+      // Do not reveal that the email is unknown
+      return res.json({
+        success: true,
+        message: 'If an account exists with that email, an OTP has been sent.',
+      });
+    }
+
+    // Invalidate any previous OTPs for this email
+    await PasswordReset.updateMany(
+      { email, used: false },
+      { used: true, expiresAt: new Date(0) }
+    );
+
+    const otp = crypto.randomInt(100000, 1000000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await PasswordReset.create({ email, otp, expiresAt });
+
+    sendOtpEmail(email, otp);
+
+    res.json({
+      success: true,
+      message: 'If an account exists with that email, an OTP has been sent.',
+    });
+  } catch (error) {
+    console.error('FORGOT PASSWORD ERROR:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ==========================================
+// RESET PASSWORD (verify OTP + set new password)
+// ==========================================
+exports.resetPasswordWithOtp = async (req, res) => {
+  try {
+    const email = String((req.body.email || '').trim()).toLowerCase();
+    const { otp, newPassword, confirmPassword } = req.body;
+
+    if (!email || !otp || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: 'Email, OTP and new password are required' });
+    }
+
+    if (!isValidPassword(newPassword)) {
+      return res.status(400).json({
+        message: 'Password must be at least 8 characters and include both letters and numbers',
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'Passwords do not match' });
+    }
+
+    const record = await PasswordReset.findOne({
+      email,
+      used: false,
+    }).select('+otp');
+
+    if (!record || record.otp !== String(otp).trim()) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    if (record.expiresAt.getTime() < Date.now()) {
+      return res.status(400).json({ message: 'OTP has expired. Request a new one.' });
+    }
+
+    let user = await User.findOne({ email });
+    if (!user) user = await Admin.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Account not found' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    record.used = true;
+    await record.save();
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully. Please login with your new password.',
+    });
+  } catch (error) {
+    console.error('RESET PASSWORD ERROR:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ==========================================
+// Send the OTP to the user's email.
+// This project has no mailer configured, so
+// the OTP is logged server-side. Swap this
+// function body for a real email/SMS provider
+// (e.g. Nodemailer, Twilio) in production.
+// ==========================================
+const sendOtpEmail = (email, otp) => {
+  console.log(`[FORGOT-PASSWORD] OTP for ${email}: ${otp}`);
 };

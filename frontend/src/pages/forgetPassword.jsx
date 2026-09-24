@@ -1,18 +1,37 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import API from "../services/api";
 
 export default function ForgotPassword() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email) {
-      alert("Please enter your email.");
+      setError("Please enter your email.");
       return;
     }
 
-    alert("OTP Sent Successfully (Demo)");
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const res = await API.post("/auth/forgot-password", { email });
+      const msg =
+        res.data?.message || "If an account exists with that email, an OTP has been sent.";
+      setMessage(msg);
+      setTimeout(() => navigate(`/reset-password?email=${encodeURIComponent(email)}`), 1500);
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not send OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -21,7 +40,7 @@ export default function ForgotPassword() {
         <h2>🔐 Forgot Password</h2>
 
         <p style={styles.text}>
-          Enter your registered email address.
+          Enter your registered email address. We will send you a one-time password (OTP).
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -33,12 +52,15 @@ export default function ForgotPassword() {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <button style={styles.button}>
-            Send OTP
+          {error && <p style={styles.error}>{error}</p>}
+          {message && <p style={styles.success}>{message}</p>}
+
+          <button type="submit" style={styles.button} disabled={loading}>
+            {loading ? "Sending OTP..." : "Send OTP"}
           </button>
         </form>
 
-        <Link to="/" style={styles.link}>
+        <Link to="/login" style={styles.link}>
           ← Back to Login
         </Link>
       </div>
@@ -89,6 +111,18 @@ const styles = {
     border: "none",
     borderRadius: "8px",
     cursor: "pointer",
+  },
+
+  error: {
+    color: "#dc2626",
+    marginBottom: "12px",
+    fontSize: "14px",
+  },
+
+  success: {
+    color: "#16a34a",
+    marginBottom: "12px",
+    fontSize: "14px",
   },
 
   link: {

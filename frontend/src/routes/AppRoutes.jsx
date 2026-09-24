@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ForgotPassword from "../pages/forgetPassword";
+import ResetPassword from "../pages/ResetPassword";
 import Unauthorized from "../pages/Unauthorized";
 
 import MainLayout from "../layouts/mainLayout";
@@ -74,6 +75,7 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
       {/* Protected routes */}
