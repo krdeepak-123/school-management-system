@@ -22,7 +22,7 @@ router.get("/me", protect, getMyProfile);
 
 // Edit permitted profile fields only
 // (mobile, address, qualification, photo)
-router.put("/me", protect, updateMyProfile);
+router.put("/me", protect, upload.single("photo"), updateMyProfile);
 
 // =====================================
 // CREATE TEACHER (Principal, Director, Admin)

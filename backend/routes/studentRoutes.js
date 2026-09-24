@@ -30,6 +30,7 @@ router.get(
 router.put(
   "/me",
   protect,
+  upload.single("photo"),
   updateMyProfile
 );
 

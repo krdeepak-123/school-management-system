@@ -477,7 +477,7 @@ export default function AppRoutes() {
         <Route
           path="/students"
           element={
-            <RoleRoute roles={["teacher", "principal", "director", "admin"]}>
+            <RoleRoute roles={["principal", "director", "admin"]}>
               <Students />
             </RoleRoute>
           }
@@ -495,7 +495,7 @@ export default function AppRoutes() {
         <Route
           path="/classes"
           element={
-            <RoleRoute roles={["teacher", "principal", "director", "admin"]}>
+            <RoleRoute roles={["principal", "director", "admin"]}>
               <Classes />
             </RoleRoute>
           }
@@ -504,7 +504,7 @@ export default function AppRoutes() {
         <Route
           path="/attendance"
           element={
-            <RoleRoute roles={["teacher", "principal", "director", "admin"]}>
+            <RoleRoute roles={["principal", "director", "admin"]}>
               <Attendance />
             </RoleRoute>
           }
